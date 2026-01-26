@@ -60,7 +60,7 @@ export default function AdminPropertiesPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>{property.ownerId}</TableCell>
-                <TableCell>₹{property.pricePerNight}/night</TableCell>
+                <TableCell>INR {property.pricePerNight}/night</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

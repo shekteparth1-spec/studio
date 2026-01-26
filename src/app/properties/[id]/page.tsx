@@ -155,7 +155,7 @@ export default function PropertyDetailsPage({
               <Card className="sticky top-24 shadow-lg">
                 <CardContent className="p-6">
                   <p className="text-2xl font-bold">
-                    ₹{property.pricePerNight}
+                    INR {property.pricePerNight}
                     <span className="text-base font-normal text-muted-foreground">
                       /night
                     </span>

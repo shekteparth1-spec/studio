@@ -50,7 +50,7 @@ const formSchema = z.object({
   name: z.string().min(5, 'Property name must be at least 5 characters.'),
   type: z.enum(['farmhouse', 'resort']),
   location: z.string().min(3, 'Location is required.'),
-  pricePerNight: z.coerce.number().min(10, 'Price must be at least ₹10.'),
+  pricePerNight: z.coerce.number().min(10, 'Price must be at least 10 INR.'),
   bedrooms: z.coerce.number().min(1, 'Must have at least 1 bedroom.'),
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
   description: z.string().min(50, 'Description must be at least 50 characters.'),
@@ -173,7 +173,7 @@ export default function SubmitPropertyPage() {
                 name="pricePerNight"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price per night (₹)</FormLabel>
+                    <FormLabel>Price per night (INR)</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>

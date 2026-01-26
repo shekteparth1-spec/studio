@@ -60,7 +60,7 @@ export default function UserDashboardPage() {
                       {property.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>₹{property.pricePerNight}/night</TableCell>
+                  <TableCell>INR {property.pricePerNight}/night</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
