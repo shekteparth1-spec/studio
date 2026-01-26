@@ -13,8 +13,10 @@ import {
   Sprout,
   Dumbbell,
   Waves,
+  Map,
+  Phone,
 } from 'lucide-react';
-import { properties } from '@/lib/data';
+import { properties, users } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -28,6 +30,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 
 const amenityIcons: { [key: string]: React.ReactNode } = {
   wifi: <Wifi size={20} />,
@@ -50,6 +53,8 @@ export default function PropertyDetailsPage({
   if (!property) {
     notFound();
   }
+
+  const owner = users.find((u) => u.id === property.ownerId);
 
   const propertyImages = property.imageIds.map(
     (id) => PlaceHolderImages.find((img) => img.id === id)!
@@ -108,7 +113,7 @@ export default function PropertyDetailsPage({
               <div className="flex items-center justify-between">
                 <h2 className="font-headline text-2xl font-semibold">
                   {property.type === 'farmhouse' ? 'Farmhouse' : 'Resort'}{' '}
-                  hosted by Owner
+                  hosted by {owner?.name || 'Owner'}
                 </h2>
                 <Badge variant={property.type === 'farmhouse' ? 'secondary' : 'default'}>{property.type}</Badge>
               </div>
@@ -160,9 +165,32 @@ export default function PropertyDetailsPage({
                       /night
                     </span>
                   </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Contact the property owner to book your stay.
-                  </p>
+                  <div className="mt-6 flex flex-col gap-4">
+                    <Button asChild size="lg">
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          property.location
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Map className="mr-2 h-5 w-5" />
+                        Get Directions
+                      </a>
+                    </Button>
+                    {owner?.phone && (
+                      <Button asChild size="lg" variant="outline">
+                        <a
+                          href={`https://wa.me/${owner.phone}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Phone className="mr-2 h-5 w-5" />
+                          Contact Owner
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
