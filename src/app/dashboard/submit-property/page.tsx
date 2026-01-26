@@ -341,7 +341,7 @@ export default function SubmitPropertyPage() {
                 <FormItem>
                   <FormLabel>Photos</FormLabel>
                   <FormControl>
-                    <>
+                    <div>
                       <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10">
                         <div className="text-center">
                           <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -390,7 +390,7 @@ export default function SubmitPropertyPage() {
                           ))}
                         </div>
                       )}
-                    </>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
