@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import Image from 'next/image';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Sparkles, Loader2, Upload } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
@@ -55,10 +56,12 @@ const formSchema = z.object({
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
   description: z.string().min(50, 'Description must be at least 50 characters.'),
   amenities: z.array(z.string()),
+  photos: z.array(z.string()).optional(),
 });
 
 export default function SubmitPropertyPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,6 +75,7 @@ export default function SubmitPropertyPage() {
       squareFeet: 500,
       description: '',
       amenities: ['wifi', 'kitchen'],
+      photos: [],
     },
   });
 
@@ -96,6 +100,45 @@ export default function SubmitPropertyPage() {
       setIsAiLoading(false);
     }
   }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const currentPhotos = form.getValues('photos') || [];
+    const newFiles = Array.from(files);
+
+    const filePromises = newFiles.map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(filePromises).then(newPhotoDataUrls => {
+      const allPhotos = [...currentPhotos, ...newPhotoDataUrls];
+      form.setValue('photos', allPhotos, { shouldValidate: true });
+      setImagePreviews(allPhotos);
+    }).catch(error => {
+      console.error("Error reading files:", error);
+      toast({
+        variant: "destructive",
+        title: "Error uploading images",
+        description: "There was a problem processing your images.",
+      });
+    });
+
+    e.target.value = '';
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    const updatedPhotos = (form.getValues('photos') || []).filter((_, index) => index !== indexToRemove);
+    form.setValue('photos', updatedPhotos, { shouldValidate: true });
+    setImagePreviews(updatedPhotos);
+  };
+
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
@@ -291,25 +334,68 @@ export default function SubmitPropertyPage() {
               )}
             />
 
-            <div>
-              <Label>Photos</Label>
-              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10">
-                <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <div className="mt-4 flex text-sm leading-6 text-muted-foreground">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer rounded-md font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 hover:text-primary/80"
-                    >
-                      <span>Upload files</span>
-                      <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
-                  </div>
-                  <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG, GIF up to 10MB</p>
-                </div>
-              </div>
-            </div>
+            <FormField
+              control={form.control}
+              name="photos"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Photos</FormLabel>
+                  <FormControl>
+                    <>
+                      <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10">
+                        <div className="text-center">
+                          <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                          <div className="mt-4 flex text-sm leading-6 text-muted-foreground">
+                            <label
+                              htmlFor="file-upload"
+                              className="relative cursor-pointer rounded-md font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 hover:text-primary/80"
+                            >
+                              <span>Upload files</span>
+                              <input
+                                id="file-upload"
+                                name="file-upload"
+                                type="file"
+                                className="sr-only"
+                                multiple
+                                accept="image/*"
+                                onChange={handleFileChange}
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                      </div>
+                      {imagePreviews.length > 0 && (
+                        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                          {imagePreviews.map((src, index) => (
+                            <div key={index} className="group relative aspect-square">
+                              <Image
+                                src={src}
+                                alt={`Preview ${index + 1}`}
+                                fill
+                                className="rounded-md object-cover"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                                onClick={() => handleRemoveImage(index)}
+                              >
+                                <X className="h-4 w-4" />
+                                <span className="sr-only">Remove image</span>
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button type="submit" size="lg" className="w-full sm:w-auto">Submit for Review</Button>
           </form>
