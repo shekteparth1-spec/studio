@@ -46,7 +46,7 @@ export default function Home() {
   const [properties, setProperties] = useState<Property[]>(approvedProperties);
   const [location, setLocation] = useState('');
   const [propertyType, setPropertyType] = useState('any');
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([1000, 100000]);
   const [bedrooms, setBedrooms] = useState('any');
   const [areaRange, setAreaRange] = useState([500, 5000]);
   const { toast } = useToast();
@@ -176,8 +176,9 @@ export default function Home() {
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
-                      max={1000}
-                      step={10}
+                      min={1000}
+                      max={100000}
+                      step={500}
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
