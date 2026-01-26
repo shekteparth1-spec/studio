@@ -80,7 +80,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                         <h3 className="font-headline text-xl font-semibold">Office</h3>
-                        <p className="text-muted-foreground">123 Harvest Lane, Greenfield</p>
+                        <p className="text-muted-foreground">123 Harvest Lane, Green Valley</p>
                         <p className="text-muted-foreground">India</p>
                     </div>
                 </div>

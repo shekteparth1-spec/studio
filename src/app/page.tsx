@@ -129,7 +129,7 @@ export default function Home() {
                     <div className="flex gap-2">
                       <Input
                         id="location"
-                        placeholder="e.g., Napa Valley"
+                        placeholder="e.g., Nashik"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                       />

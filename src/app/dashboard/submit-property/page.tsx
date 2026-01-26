@@ -203,7 +203,7 @@ export default function SubmitPropertyPage() {
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Napa Valley, CA" {...field} />
+                    <Input placeholder="e.g., Lonavala, Maharashtra" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
