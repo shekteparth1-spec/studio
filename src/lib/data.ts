@@ -19,12 +19,13 @@ export type User = {
   name: string;
   email: string;
   role: 'user' | 'admin';
+  password?: string;
 };
 
 export const users: User[] = [
-  { id: 'user-1', name: 'John Doe', email: 'john@example.com', role: 'user' },
-  { id: 'user-2', name: 'Jane Smith', email: 'jane@example.com', role: 'user' },
-  { id: 'admin-1', name: 'Admin', email: 'admin@harvesthaven.com', role: 'admin' },
+  { id: 'user-1', name: 'John Doe', email: 'john@example.com', role: 'user', password: 'password123' },
+  { id: 'user-2', name: 'Jane Smith', email: 'jane@example.com', role: 'user', password: 'password456' },
+  { id: 'admin-1', name: 'Admin', email: 'admin@harvesthaven.com', role: 'admin', password: 'adminpassword' },
 ];
 
 export const properties: Property[] = [
