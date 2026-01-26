@@ -11,7 +11,6 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import {
-  LayoutDashboard,
   Home,
   LogOut,
   Users,
@@ -20,12 +19,22 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  const getPageTitle = () => {
+    if (pathname === '/admin/properties') return 'Properties';
+    if (pathname === '/admin/users') return 'Users';
+    if (pathname === '/admin/dashboard') return 'Property Submissions';
+    return 'Admin Dashboard';
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background">
@@ -36,15 +45,7 @@ export default function AdminLayout({
           <SidebarContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Dashboard">
-                  <Link href="/admin/dashboard">
-                    <LayoutDashboard />
-                    <span>Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Submissions">
+                <SidebarMenuButton asChild tooltip="Submissions" isActive={pathname === '/admin/dashboard'}>
                   <Link href="/admin/dashboard">
                     <CheckCheck />
                     <span>Submissions</span>
@@ -52,16 +53,16 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Properties">
-                   <Link href="#">
+                <SidebarMenuButton asChild tooltip="Properties" isActive={pathname === '/admin/properties'}>
+                   <Link href="/admin/properties">
                     <Building />
                     <span>Properties</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Users">
-                   <Link href="#">
+                <SidebarMenuButton asChild tooltip="Users" isActive={pathname === '/admin/users'}>
+                   <Link href="/admin/users">
                     <Users />
                     <span>Users</span>
                   </Link>
@@ -93,7 +94,7 @@ export default function AdminLayout({
             <div className="md:hidden">
               <SidebarTrigger />
             </div>
-            <h1 className="font-headline text-2xl font-semibold">Admin Dashboard</h1>
+            <h1 className="font-headline text-2xl font-semibold">{getPageTitle()}</h1>
           </header>
           <div className="p-4 lg:p-6">{children}</div>
         </main>
