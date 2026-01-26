@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminLayout({
   children,
@@ -27,6 +28,16 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
+    router.push('/login');
+  };
 
   const getPageTitle = () => {
     if (pathname === '/admin/properties') return 'Properties';
@@ -81,7 +92,7 @@ export default function AdminLayout({
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Logout">
+                    <SidebarMenuButton tooltip="Logout" onClick={handleLogout}>
                         <LogOut />
                         <span>Logout</span>
                     </SidebarMenuButton>
