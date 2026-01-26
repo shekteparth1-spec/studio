@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -14,14 +17,37 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { properties, users } from '@/lib/data';
+import { properties as initialProperties, users, type Property } from '@/lib/data';
 import { Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-const pendingProperties = properties.filter((p) => p.status === 'pending');
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboardPage() {
+  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const { toast } = useToast();
+
+  const handleStatusChange = (propertyId: string, status: 'approved' | 'rejected') => {
+    setProperties(properties.map(p =>
+      p.id === propertyId ? { ...p, status } : p
+    ));
+
+    if (status === 'approved') {
+      toast({
+        title: 'Property Approved',
+        description: 'The property has been approved and is now live.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Property Rejected',
+        description: 'The property submission has been rejected.',
+      });
+    }
+  };
+
+  const pendingProperties = properties.filter((p) => p.status === 'pending');
+
   return (
     <Card>
       <CardHeader>
@@ -60,11 +86,21 @@ export default function AdminDashboardPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="icon" className="h-8 w-8 border-green-500 text-green-500 hover:bg-green-500/10 hover:text-green-600">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 border-green-500 text-green-500 hover:bg-green-500/10 hover:text-green-600"
+                        onClick={() => handleStatusChange(property.id, 'approved')}
+                      >
                         <Check className="h-4 w-4" />
                         <span className="sr-only">Approve</span>
                       </Button>
-                      <Button variant="outline" size="icon" className="h-8 w-8 border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive/90">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive/90"
+                        onClick={() => handleStatusChange(property.id, 'rejected')}
+                      >
                         <X className="h-4 w-4" />
                         <span className="sr-only">Reject</span>
                       </Button>
