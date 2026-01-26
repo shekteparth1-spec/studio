@@ -1,5 +1,7 @@
 'use client';
 
+import React, { useState } from 'react';
+import { Pen } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
@@ -12,10 +14,23 @@ const user = users.find(u => u.id === 'user-1');
 
 export default function ProfilePage() {
   const { toast } = useToast();
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   if (!user) {
     return <div>User not found.</div>;
   }
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +39,8 @@ export default function ProfilePage() {
         description: "Your profile information has been successfully updated.",
     });
   }
+  
+  const avatarSrc = avatarPreview || `https://i.pravatar.cc/150?u=${user.id}`;
 
   return (
     <Card>
@@ -33,10 +50,20 @@ export default function ProfilePage() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex items-center gap-4">
-          <Avatar className="h-20 w-20">
-            <AvatarImage src={`https://i.pravatar.cc/150?u=${user.id}`} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-          </Avatar>
+           <div className="relative group">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={avatarSrc} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <Label 
+              htmlFor="avatar-upload" 
+              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full"
+            >
+              <Pen className="text-white h-6 w-6"/>
+              <span className="sr-only">Change photo</span>
+            </Label>
+            <Input id="avatar-upload" type="file" className="sr-only" accept="image/*" onChange={handleAvatarChange}/>
+          </div>
           <div>
             <h2 className="text-2xl font-bold">{user.name}</h2>
             <p className="text-muted-foreground">{user.email}</p>
