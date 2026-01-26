@@ -27,7 +27,6 @@ import {
 } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 const amenityIcons: { [key: string]: React.ReactNode } = {
@@ -151,61 +150,19 @@ export default function PropertyDetailsPage({
               </div>
             </div>
 
-            {/* Booking Card */}
+            {/* Price Card */}
             <div className="lg:col-span-1">
               <Card className="sticky top-24 shadow-lg">
                 <CardContent className="p-6">
                   <p className="text-2xl font-bold">
-                    ${property.pricePerNight}
+                    ₹{property.pricePerNight}
                     <span className="text-base font-normal text-muted-foreground">
                       /night
                     </span>
                   </p>
-                  <div className="mt-4 grid gap-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="checkin" className="text-sm font-medium">Check-in</label>
-                        <input type="date" id="checkin" className="mt-1 w-full rounded-md border p-2"/>
-                      </div>
-                      <div>
-                        <label htmlFor="checkout" className="text-sm font-medium">Checkout</label>
-                        <input type="date" id="checkout" className="mt-1 w-full rounded-md border p-2"/>
-                      </div>
-                    </div>
-                     <div>
-                        <label htmlFor="guests" className="text-sm font-medium">Guests</label>
-                        <select id="guests" className="mt-1 w-full rounded-md border p-2">
-                            <option>1 guest</option>
-                            <option>2 guests</option>
-                            <option>3 guests</option>
-                            <option>4 guests</option>
-                        </select>
-                     </div>
-                  </div>
-                  <Button className="mt-6 w-full" size="lg">Reserve</Button>
-                  <p className="mt-2 text-center text-sm text-muted-foreground">You won't be charged yet</p>
-                
-                  <Separator className="my-4"/>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span>${property.pricePerNight} x 5 nights</span>
-                        <span>${property.pricePerNight * 5}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span>Cleaning fee</span>
-                        <span>$75</span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span>Service fee</span>
-                        <span>$120</span>
-                    </div>
-                    <Separator className="my-2"/>
-                     <div className="flex justify-between font-bold">
-                        <span>Total</span>
-                        <span>${property.pricePerNight * 5 + 75 + 120}</span>
-                    </div>
-                  </div>
-
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Contact the property owner to book your stay.
+                  </p>
                 </CardContent>
               </Card>
             </div>
