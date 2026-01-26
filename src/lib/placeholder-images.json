@@ -1,3 +1,70 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-barn",
+      "description": "A beautiful modern barn house at sunset.",
+      "imageUrl": "https://images.unsplash.com/photo-1570138167486-5cc564194f6c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bW9kZXJuJTIwYmFybnxlbnwwfHx8fDE3Njk0NDc3OTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern barn"
+    },
+    {
+      "id": "farmhouse-1-ext",
+      "description": "Exterior of a rustic farmhouse with a large porch.",
+      "imageUrl": "https://images.unsplash.com/photo-1685881495881-25c035670d82?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxydXN0aWMlMjBmYXJtaG91c2V8ZW58MHx8fHwxNzY5MzQ2MTY2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "rustic farmhouse"
+    },
+    {
+      "id": "farmhouse-1-int",
+      "description": "Cozy interior of a farmhouse living room with a fireplace.",
+      "imageUrl": "https://images.unsplash.com/photo-1607809714110-e34f71c7b2ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjb3p5JTIwaW50ZXJpb3J8ZW58MHx8fHwxNzY5MzQxNTE2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cozy interior"
+    },
+    {
+      "id": "resort-1-pool",
+      "description": "Luxury resort pool area with lounge chairs.",
+      "imageUrl": "https://images.unsplash.com/photo-1551918120-9739cb430c6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjByZXNvcnR8ZW58MHx8fHwxNzY5NDA2MzMxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "luxury resort"
+    },
+    {
+      "id": "resort-1-room",
+      "description": "Modern resort hotel room with a view.",
+      "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxob3RlbCUyMHJvb218ZW58MHx8fHwxNzY5NDQzNTUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hotel room"
+    },
+    {
+      "id": "farmhouse-2-kitchen",
+      "description": "Spacious farmhouse kitchen with a central island.",
+      "imageUrl": "https://images.unsplash.com/photo-1628797285815-453c1d0d21e3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmYXJtaG91c2UlMjBraXRjaGVufGVufDB8fHx8MTc2OTMzMTY0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "farmhouse kitchen"
+    },
+    {
+      "id": "resort-2-spa",
+      "description": "Serene spa and wellness center at a resort.",
+      "imageUrl": "https://images.unsplash.com/photo-1650609952444-dcd6c5de8f96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzZXJlbmUlMjBzcGF8ZW58MHx8fHwxNzY5NDE1NTE3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "serene spa"
+    },
+    {
+      "id": "cabin-1-exterior",
+      "description": "A-frame cabin in the woods.",
+      "imageUrl": "https://images.unsplash.com/photo-1611170966644-6dc38c7d87aa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmcmFtZSUyMGNhYmlufGVufDB8fHx8MTc2OTQ0Nzc5NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "frame cabin"
+    },
+    {
+      "id": "villa-1-exterior",
+      "description": "Luxury villa with a private pool.",
+      "imageUrl": "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bHV4dXJ5JTIwdmlsbGF8ZW58MHx8fHwxNzY5NDIyMjYxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "luxury villa"
+    },
+    {
+      "id": "farmhouse-3-bedroom",
+      "description": "Farmhouse bedroom with rustic decor.",
+      "imageUrl": "https://images.unsplash.com/photo-1600661550603-64fb7a8ff958?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxydXN0aWMlMjBiZWRyb29tfGVufDB8fHx8MTc2OTQ0Nzc5NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "rustic bedroom"
+    },
+    {
+      "id": "resort-3-lobby",
+      "description": "Elegant lobby of a high-end resort.",
+      "imageUrl": "https://images.unsplash.com/photo-1758448656987-cfae6bf225e4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxlbGVnYW50JTIwbG9iYnl8ZW58MHx8fHwxNzY5NDQ3Nzk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "elegant lobby"
+    }
+  ]
 }
