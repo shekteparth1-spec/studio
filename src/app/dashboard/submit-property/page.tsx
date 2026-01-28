@@ -63,7 +63,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const YOUR_GOOGLE_PAY_UPI_ID = 'parthshekte1-1@gmail.com';
+const YOUR_GOOGLE_PAY_UPI_ID = 'parthshekte1-1@oksbi';
 const YOUR_PAYEE_NAME = 'Parth Shekte';
 const AMOUNT = 50;
 const NOTE = 'Farmhouse Registration Fee';
