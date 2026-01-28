@@ -69,14 +69,18 @@ export default function PropertyDetailsPage({
           <div>
             <h1 className="font-headline text-4xl font-bold">{property.name}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Star size={16} className="text-primary" />
-                <span className="font-semibold text-foreground">
-                  {property.rating}
-                </span>
-                <span>(reviews)</span>
-              </div>
-              <span className="hidden sm:inline">·</span>
+              {property.rating > 0 && (
+                <>
+                  <div className="flex items-center gap-1">
+                    <Star size={16} className="text-primary" />
+                    <span className="font-semibold text-foreground">
+                      {property.rating}
+                    </span>
+                    <span>(reviews)</span>
+                  </div>
+                  <span className="hidden sm:inline">·</span>
+                </>
+              )}
               <div className="flex items-center gap-2">
                 <MapPin size={16} />
                 <span>{property.location}</span>

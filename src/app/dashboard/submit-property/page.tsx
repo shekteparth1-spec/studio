@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Sparkles, Loader2, Upload, X, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +39,7 @@ import {
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { properties, type Property } from '@/lib/data';
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -73,6 +75,7 @@ export default function SubmitPropertyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
+  const router = useRouter();
   
   const [submissionStep, setSubmissionStep] = useState<'form' | 'payment' | 'confirmation'>('form');
   const [formData, setFormData] = useState<FormValues | null>(null);
@@ -179,15 +182,25 @@ export default function SubmitPropertyPage() {
       // Here we simulate a delay.
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const finalData = {
-          ...formData,
-          paymentMode: "Google Pay UPI",
-          paymentStatus: "submitted",
-          transactionId: utr,
+      const newProperty: Property = {
+        id: `prop-${Date.now()}`,
+        name: formData!.name,
+        type: formData!.type,
+        location: formData!.location,
+        pricePerNight: formData!.pricePerNight,
+        bedrooms: formData!.bedrooms,
+        squareFeet: formData!.squareFeet,
+        rating: 0, // New properties have 0 rating initially
+        description: formData!.description,
+        amenities: formData!.amenities,
+        // The submitted photos are data URIs. The property card component
+        // currently uses image IDs. For now, we'll use placeholder images.
+        imageIds: ['farmhouse-1-ext', 'farmhouse-1-int'],
+        ownerId: 'user-1', // Placeholder owner
       };
 
-      console.log("Listing property with payment confirmation:", finalData);
-      // In a real application, you would save `finalData` to Firestore here.
+      // Add property to the beginning of the list
+      properties.unshift(newProperty);
 
       toast({
         title: 'Payment Confirmed!',
@@ -200,6 +213,9 @@ export default function SubmitPropertyPage() {
       setFormData(null);
       setUtr('');
       setSubmissionStep('form');
+
+      // Redirect to see the new property
+      router.push('/');
 
     } catch (error) {
       console.error("Submission failed:", error);

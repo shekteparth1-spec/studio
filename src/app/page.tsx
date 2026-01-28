@@ -268,10 +268,12 @@ export default function Home() {
                               /night
                             </span>
                           </p>
-                          <div className="flex items-center gap-1">
-                            <Star size={16} className="text-primary" />
-                            <span className="font-semibold">{property.rating}</span>
-                          </div>
+                          {property.rating > 0 && (
+                            <div className="flex items-center gap-1">
+                              <Star size={16} className="text-primary" />
+                              <span className="font-semibold">{property.rating}</span>
+                            </div>
+                          )}
                         </CardFooter>
                       </Card>
                     );
