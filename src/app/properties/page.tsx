@@ -34,7 +34,6 @@ export default function PropertiesPage() {
             </h1>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {properties
-                .filter((p) => p.status === 'approved')
                 .map((property) => {
                   const image = PlaceHolderImages.find(
                     (img) => img.id === property.imageIds[0]

@@ -11,7 +11,6 @@ export type Property = {
   amenities: string[];
   imageIds: string[];
   ownerId: string;
-  status: 'pending' | 'approved' | 'rejected';
 };
 
 export type User = {
@@ -26,7 +25,6 @@ export type User = {
 export const users: User[] = [
   { id: 'user-1', name: 'John Doe', email: 'john@example.com', role: 'user', password: 'password123', phone: '919876543210' },
   { id: 'user-2', name: 'Jane Smith', email: 'jane@example.com', role: 'user', password: 'password456', phone: '919876543211' },
-  { id: 'admin-1', name: 'Admin', email: 'admin@harvesthaven.com', role: 'user', password: 'adminpassword', phone: '911234567890' },
 ];
 
 export const properties: Property[] = [
@@ -43,7 +41,6 @@ export const properties: Property[] = [
     amenities: ['wifi', 'pool', 'kitchen', 'parking', 'fireplace'],
     imageIds: ['farmhouse-1-ext', 'farmhouse-1-int'],
     ownerId: 'user-1',
-    status: 'approved',
   },
   {
     id: 'prop-2',
@@ -58,7 +55,6 @@ export const properties: Property[] = [
     amenities: ['wifi', 'pool', 'gym', 'spa', 'restaurant'],
     imageIds: ['resort-1-pool', 'resort-1-room'],
     ownerId: 'user-2',
-    status: 'approved',
   },
   {
     id: 'prop-3',
@@ -73,7 +69,6 @@ export const properties: Property[] = [
     amenities: ['kitchen', 'fireplace', 'wifi', 'parking'],
     imageIds: ['cabin-1-exterior', 'farmhouse-3-bedroom'],
     ownerId: 'user-1',
-    status: 'approved',
   },
     {
     id: 'prop-4',
@@ -88,7 +83,6 @@ export const properties: Property[] = [
     amenities: ['wifi', 'pool', 'kitchen', 'parking', 'fireplace'],
     imageIds: ['villa-1-exterior', 'farmhouse-2-kitchen'],
     ownerId: 'user-2',
-    status: 'approved',
   },
   {
     id: 'prop-5',
@@ -103,7 +97,6 @@ export const properties: Property[] = [
     amenities: ['kitchen', 'wifi', 'parking'],
     imageIds: ['farmhouse-2-kitchen', 'farmhouse-3-bedroom'],
     ownerId: 'user-1',
-    status: 'pending',
   },
     {
     id: 'prop-6',
@@ -118,6 +111,5 @@ export const properties: Property[] = [
     amenities: ['wifi', 'pool', 'gym', 'spa', 'restaurant'],
     imageIds: ['resort-2-spa', 'resort-3-lobby'],
     ownerId: 'user-2',
-    status: 'rejected',
   },
 ];

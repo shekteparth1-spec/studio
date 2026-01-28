@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { properties } from '@/lib/data';
 import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -37,7 +36,6 @@ export default function UserDashboardPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -46,20 +44,6 @@ export default function UserDashboardPage() {
               {userProperties.map((property) => (
                 <TableRow key={property.id}>
                   <TableCell className="font-medium">{property.name}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        property.status === 'approved'
-                          ? 'default'
-                          : property.status === 'pending'
-                          ? 'secondary'
-                          : 'destructive'
-                      }
-                      className={property.status === 'approved' ? 'bg-green-500/20 text-green-700 border-green-500/20' : ''}
-                    >
-                      {property.status}
-                    </Badge>
-                  </TableCell>
                   <TableCell>INR {property.pricePerNight}/night</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

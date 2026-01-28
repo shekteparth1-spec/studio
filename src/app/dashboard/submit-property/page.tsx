@@ -147,11 +147,11 @@ export default function SubmitPropertyPage() {
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      console.log("Payment successful. Submitting for review:", values);
+      console.log("Payment successful. Listing property:", values);
 
       toast({
         title: 'Payment Successful!',
-        description: 'Your property has been submitted for review.',
+        description: 'Your property is now live on Harvest Haven!',
       });
       
       form.reset();
@@ -433,7 +433,7 @@ export default function SubmitPropertyPage() {
 
             <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || isAiLoading}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Pay &amp; Submit for Review
+              Pay &amp; List Property
             </Button>
           </form>
         </Form>

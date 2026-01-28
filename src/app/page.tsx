@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BedDouble,
   MapPin,
@@ -41,9 +41,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-barn');
   
-  const approvedProperties = useMemo(() => allProperties.filter(p => p.status === 'approved'), []);
-
-  const [properties, setProperties] = useState<Property[]>(approvedProperties);
+  const [properties, setProperties] = useState<Property[]>(allProperties);
   const [location, setLocation] = useState('');
   const [propertyType, setPropertyType] = useState('any');
   const [priceRange, setPriceRange] = useState([1000, 100000]);
@@ -59,7 +57,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    let filtered = approvedProperties;
+    let filtered = allProperties;
 
     if (location) {
       filtered = filtered.filter(p => p.location.toLowerCase().includes(location.toLowerCase()));
@@ -82,7 +80,7 @@ export default function Home() {
     filtered = filtered.filter(p => p.squareFeet >= areaRange[0] && p.squareFeet <= areaRange[1]);
 
     setProperties(filtered);
-  }, [location, propertyType, priceRange, bedrooms, areaRange, approvedProperties]);
+  }, [location, propertyType, priceRange, bedrooms, areaRange]);
 
 
   return (
