@@ -61,6 +61,7 @@ const formSchema = z.object({
 
 export default function SubmitPropertyPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -140,12 +141,32 @@ export default function SubmitPropertyPage() {
   };
 
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: 'Payment Successful!',
-      description: 'Your property has been submitted for review after a payment of INR 50.',
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    try {
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log("Payment successful. Submitting for review:", values);
+
+      toast({
+        title: 'Payment Successful!',
+        description: 'Your property has been submitted for review.',
+      });
+      
+      form.reset();
+      setImagePreviews([]);
+
+    } catch (error) {
+      console.error("Payment/Submission failed:", error);
+      toast({
+          variant: "destructive",
+          title: 'Payment Failed',
+          description: 'There was an error processing your payment. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -264,7 +285,7 @@ export default function SubmitPropertyPage() {
                       variant="ghost"
                       size="sm"
                       onClick={handleGenerateDescription}
-                      disabled={isAiLoading}
+                      disabled={isAiLoading || isSubmitting}
                     >
                       {isAiLoading ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -410,7 +431,10 @@ export default function SubmitPropertyPage() {
                 </CardContent>
             </Card>
 
-            <Button type="submit" size="lg" className="w-full sm:w-auto">Pay &amp; Submit for Review</Button>
+            <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || isAiLoading}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Pay &amp; Submit for Review
+            </Button>
           </form>
         </Form>
       </CardContent>
