@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Sparkles, Loader2, Upload, X } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +37,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -59,13 +61,28 @@ const formSchema = z.object({
   photos: z.array(z.string()).optional(),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
+const UPI_ID = 'parthshekte1-1@gmail.com';
+const PAYEE_NAME = 'Harvest Haven';
+const AMOUNT = 50;
+const NOTE = 'Farmhouse Registration Fee';
+
 export default function SubmitPropertyPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
+  
+  const [submissionStep, setSubmissionStep] = useState<'form' | 'payment' | 'confirmation'>('form');
+  const [formData, setFormData] = useState<FormValues | null>(null);
+  const [utr, setUtr] = useState('');
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent(NOTE)}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
@@ -141,45 +158,152 @@ export default function SubmitPropertyPage() {
   };
 
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onFormSubmit(values: FormValues) {
+    setFormData(values);
+    setSubmissionStep('payment');
+  }
+
+  async function handleFinalSubmit() {
+    if (!utr || utr.trim().length < 12) {
+        toast({
+            variant: "destructive",
+            title: 'Invalid UTR',
+            description: 'Please enter a valid UPI Transaction ID (UTR).',
+        });
+        return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Simulate payment processing
+      // In a real app, you would verify the UTR with your payment gateway.
+      // Here we simulate a delay.
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      console.log("Payment successful. Listing property:", values);
+      const finalData = {
+          ...formData,
+          paymentMode: "Google Pay UPI",
+          paymentStatus: "submitted",
+          transactionId: utr,
+      };
+
+      console.log("Listing property with payment confirmation:", finalData);
+      // In a real application, you would save `finalData` to Firestore here.
 
       toast({
-        title: 'Payment Successful!',
+        title: 'Payment Confirmed!',
         description: 'Your property is now live on Harvest Haven!',
       });
       
+      // Reset everything
       form.reset();
       setImagePreviews([]);
+      setFormData(null);
+      setUtr('');
+      setSubmissionStep('form');
 
     } catch (error) {
-      console.error("Payment/Submission failed:", error);
+      console.error("Submission failed:", error);
       toast({
           variant: "destructive",
-          title: 'Payment Failed',
-          description: 'There was an error processing your payment. Please try again.',
+          title: 'Submission Failed',
+          description: 'There was an error submitting your property. Please try again.',
       });
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  if (submissionStep === 'payment') {
+    return (
+        <Card>
+            <CardHeader>
+                <div className='flex items-center gap-4'>
+                    <Button variant="ghost" size="icon" onClick={() => setSubmissionStep('form')}>
+                        <ArrowLeft />
+                    </Button>
+                    <div>
+                        <CardTitle className="font-headline">Complete Your Payment</CardTitle>
+                        <CardDescription>Scan the QR code using any UPI app.</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-6 text-center">
+                <div className="p-4 bg-white rounded-lg border">
+                    <Image src={qrCodeUrl} alt="UPI QR Code" width={250} height={250} />
+                </div>
+                <div className='space-y-2'>
+                    <p className='text-sm text-muted-foreground'>Or use the UPI ID:</p>
+                    <p className='font-mono bg-muted px-3 py-1.5 rounded-md text-sm'>{UPI_ID}</p>
+                </div>
+                <div className="text-lg font-bold">Amount: ₹{AMOUNT}</div>
+                <Alert variant="default" className="text-left">
+                    <AlertTitle className="font-semibold">Important Information</AlertTitle>
+                    <AlertDescription className="text-muted-foreground">
+                        <ul className="list-disc pl-4 mt-2 space-y-1">
+                            <li>Payment is non-refundable.</li>
+                            <li>Your farmhouse will be listed only after successful payment and confirmation.</li>
+                            <li>Please save the UPI Transaction ID (UTR) after payment.</li>
+                        </ul>
+                    </AlertDescription>
+                </Alert>
+            </CardContent>
+            <CardFooter className="flex-col gap-4">
+                 <Button size="lg" className="w-full" onClick={() => setSubmissionStep('confirmation')}>I Have Paid</Button>
+            </CardFooter>
+        </Card>
+    );
+  }
+
+  if (submissionStep === 'confirmation') {
+      return (
+        <Card>
+            <CardHeader>
+                 <div className='flex items-center gap-4'>
+                    <Button variant="ghost" size="icon" onClick={() => setSubmissionStep('payment')}>
+                        <ArrowLeft />
+                    </Button>
+                    <div>
+                        <CardTitle className="font-headline">Confirm Your Submission</CardTitle>
+                        <CardDescription>Enter the transaction ID to finalize your listing.</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="utr">UPI Transaction ID (UTR)</Label>
+                    <Input 
+                        id="utr" 
+                        placeholder="Enter the 12-digit UTR"
+                        value={utr}
+                        onChange={(e) => setUtr(e.target.value)}
+                    />
+                     <p className="text-xs text-muted-foreground">
+                        You can find this in the transaction history of your UPI app.
+                    </p>
+                </div>
+            </CardContent>
+            <CardFooter>
+                <Button size="lg" className="w-full" onClick={handleFinalSubmit} disabled={isSubmitting}>
+                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Confirm & List Property
+                </Button>
+            </CardFooter>
+        </Card>
+      )
+  }
+
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="font-headline">Submit a Property</CardTitle>
         <CardDescription>
-          Fill out the details below to list your property on Harvest Haven.
+          Fill out the details below to list your property on Harvest Haven. A one-time fee of ₹{AMOUNT} is required.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -417,23 +541,9 @@ export default function SubmitPropertyPage() {
                 </FormItem>
               )}
             />
-            
-            <Card className="bg-muted/50">
-                <CardHeader>
-                    <CardTitle className="font-headline text-xl">Listing Fee</CardTitle>
-                    <CardDescription>A one-time fee is required to list your property on our platform.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex justify-between items-center">
-                        <p className="text-muted-foreground">Amount to be paid</p>
-                        <p className="font-bold text-3xl">INR 50</p>
-                    </div>
-                </CardContent>
-            </Card>
 
             <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || isAiLoading}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Pay &amp; List Property
+              Proceed to Payment
             </Button>
           </form>
         </Form>
