@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/sheet';
 import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -23,6 +24,7 @@ const navLinks = [
 
 export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -30,6 +32,7 @@ export default function Header() {
     // This effect runs only on the client, after hydration
     const user = localStorage.getItem('user');
     setIsAuthenticated(!!user);
+    setIsClient(true);
 
     const handleStorageChange = () => {
       const user = localStorage.getItem('user');
@@ -101,26 +104,36 @@ export default function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-4">
-          {isAuthenticated ? (
+          {!isClient ? (
             <>
-              <Button variant="ghost" asChild>
-                <Link href='/dashboard'>Dashboard</Link>
-              </Button>
-              <Button onClick={handleLogout}>Logout</Button>
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-36" />
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild>
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/register">Sign up</Link>
+              {isAuthenticated ? (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href='/dashboard'>Dashboard</Link>
+                  </Button>
+                  <Button onClick={handleLogout}>Logout</Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/login">Log in</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link href="/register">Sign up</Link>
+                  </Button>
+                </>
+              )}
+               <Button variant="outline" asChild>
+                <Link href={isAuthenticated ? "/dashboard/submit-property" : "/login"}>List your property</Link>
               </Button>
             </>
           )}
-           <Button variant="outline" asChild>
-            <Link href={isAuthenticated ? "/dashboard/submit-property" : "/login"}>List your property</Link>
-          </Button>
         </div>
       </div>
     </header>

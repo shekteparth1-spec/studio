@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast"
+import { type User } from "@/lib/data"
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -39,7 +40,28 @@ export default function RegisterPage() {
         }
 
         // In a real app, you would add the user to your database here.
-        // For now, we'll just show a success message and redirect.
+        // For this demo, we'll store new users in localStorage.
+        const existingUsers: User[] = JSON.parse(localStorage.getItem('registered_users') || '[]');
+        if (existingUsers.some(u => u.email === email)) {
+             toast({
+                variant: "destructive",
+                title: "Registration Failed",
+                description: "An account with this email already exists.",
+            });
+            return;
+        }
+        
+        const newUser: User = {
+            id: `user-${Date.now()}`,
+            name: `${firstName} ${lastName}`,
+            email,
+            password,
+            role: 'user',
+        };
+
+        existingUsers.push(newUser);
+        localStorage.setItem('registered_users', JSON.stringify(existingUsers));
+
         toast({
             title: "Account Created",
             description: "You have been successfully registered. Please log in.",

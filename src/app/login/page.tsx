@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
-import { users } from "@/lib/data"
+import { users as staticUsers, type User } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
@@ -28,10 +28,17 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    const user = users.find(u => u.email === email && u.password === password)
+
+    const registeredUsers: User[] = JSON.parse(localStorage.getItem('registered_users') || '[]');
+    const allUsers = [...staticUsers, ...registeredUsers];
+    
+    const user = allUsers.find(u => u.email === email && u.password === password)
 
     if (user) {
-      localStorage.setItem('user', JSON.stringify(user)); // Store user
+      // Don't store password in localStorage for the session
+      const { password: _, ...userToStore } = user;
+      localStorage.setItem('user', JSON.stringify(userToStore));
+      
       toast({
         title: "Login Successful",
         description: `Welcome back, ${user.name}!`,
@@ -49,8 +56,10 @@ export default function LoginPage() {
   const handleGoogleLogin = () => {
     // In a real app, you'd use Firebase Auth here.
     // For now, we'll log in the first user as a demo.
-    const user = users[0];
-    localStorage.setItem('user', JSON.stringify(user));
+    const user = staticUsers[0];
+     // Don't store password in localStorage for the session
+    const { password: _, ...userToStore } = user;
+    localStorage.setItem('user', JSON.stringify(userToStore));
     toast({
         title: "Login Successful",
         description: `Welcome back, ${user.name}!`,
