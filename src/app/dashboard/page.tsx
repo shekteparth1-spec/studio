@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,13 +17,31 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { properties } from '@/lib/data';
+import { properties, type Property, type User } from '@/lib/data';
 import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
-const userProperties = properties.filter((p) => p.ownerId === 'user-1');
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function UserDashboardPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [userProperties, setUserProperties] = useState<Property[]>([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const currentUser = JSON.parse(userData);
+      setUser(currentUser);
+      const filteredProperties = properties.filter(p => p.ownerId === currentUser.id);
+      setUserProperties(filteredProperties);
+    }
+  }, []);
+
+  if (!user) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -41,7 +61,7 @@ export default function UserDashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {userProperties.map((property) => (
+              {userProperties.length > 0 ? userProperties.map((property) => (
                 <TableRow key={property.id}>
                   <TableCell className="font-medium">{property.name}</TableCell>
                   <TableCell>INR {property.pricePerNight}/night</TableCell>
@@ -55,14 +75,19 @@ export default function UserDashboardPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View Listing</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
                         <DropdownMenuItem className='text-destructive'>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                 <TableRow>
+                    <TableCell colSpan={3} className="h-24 text-center">
+                        You haven't listed any properties yet.
+                    </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

@@ -1,5 +1,8 @@
+'use client'; // Make this a client component
+
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation'; // import useRouter
+import React, { useState, useEffect } from 'react'; // import hooks
 import {
   Star,
   MapPin,
@@ -31,6 +34,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const amenityIcons: { [key: string]: React.ReactNode } = {
   wifi: <Wifi size={20} />,
@@ -48,6 +52,14 @@ export default function PropertyDetailsPage({
 }: {
   params: { id: string };
 }) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    setIsAuthenticated(!!localStorage.getItem('user'));
+  }, []);
+
   const property = properties.find((p) => p.id === params.id);
 
   if (!property) {
@@ -59,6 +71,20 @@ export default function PropertyDetailsPage({
   const propertyImages = property.imageIds.map(
     (id) => PlaceHolderImages.find((img) => img.id === id)!
   );
+
+  const handleBookingAction = (actionUrl: string, actionName: string) => {
+    if (!isAuthenticated) {
+      toast({
+        variant: "destructive",
+        title: "Login Required",
+        description: `You must be logged in to ${actionName}.`,
+      });
+      router.push('/login');
+    } else {
+      window.open(actionUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -170,28 +196,21 @@ export default function PropertyDetailsPage({
                     </span>
                   </p>
                   <div className="mt-6 flex flex-col gap-4">
-                    <Button asChild size="lg">
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          property.location
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Map className="mr-2 h-5 w-5" />
-                        Get Directions
-                      </a>
+                    <Button 
+                      size="lg"
+                      onClick={() => handleBookingAction(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`, 'get directions')}
+                    >
+                      <Map className="mr-2 h-5 w-5" />
+                      Get Directions
                     </Button>
                     {owner?.phone && (
-                      <Button asChild size="lg" variant="outline">
-                        <a
-                          href={`https://wa.me/${owner.phone}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Phone className="mr-2 h-5 w-5" />
-                          Contact Owner
-                        </a>
+                      <Button 
+                        size="lg" 
+                        variant="outline"
+                        onClick={() => handleBookingAction(`https://wa.me/${owner.phone}`, 'contact the owner')}
+                      >
+                        <Phone className="mr-2 h-5 w-5" />
+                        Contact Owner
                       </Button>
                     )}
                   </div>

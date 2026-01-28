@@ -31,6 +31,7 @@ export default function LoginPage() {
     const user = users.find(u => u.email === email && u.password === password)
 
     if (user) {
+      localStorage.setItem('user', JSON.stringify(user)); // Store user
       toast({
         title: "Login Successful",
         description: `Welcome back, ${user.name}!`,
@@ -43,6 +44,18 @@ export default function LoginPage() {
         description: "Invalid email or password.",
       })
     }
+  }
+
+  const handleGoogleLogin = () => {
+    // In a real app, you'd use Firebase Auth here.
+    // For now, we'll log in the first user as a demo.
+    const user = users[0];
+    localStorage.setItem('user', JSON.stringify(user));
+    toast({
+        title: "Login Successful",
+        description: `Welcome back, ${user.name}!`,
+    });
+    router.push('/dashboard');
   }
 
   return (
@@ -103,7 +116,7 @@ export default function LoginPage() {
               <Button type="submit" className="w-full">
                 Login
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={handleGoogleLogin} type="button">
                 Login with Google
               </Button>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { properties, type Property } from '@/lib/data';
+import { properties, type Property, type User } from '@/lib/data';
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -80,6 +80,15 @@ export default function SubmitPropertyPage() {
   const [submissionStep, setSubmissionStep] = useState<'form' | 'payment' | 'confirmation'>('form');
   const [formData, setFormData] = useState<FormValues | null>(null);
   const [utr, setUtr] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+    // The dashboard layout handles redirection if the user is not logged in.
+  }, []);
 
   const upiUrl = `upi://pay?pa=${YOUR_GOOGLE_PAY_UPI_ID}&pn=${encodeURIComponent(YOUR_PAYEE_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent(NOTE)}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
@@ -175,6 +184,15 @@ export default function SubmitPropertyPage() {
         });
         return;
     }
+    
+    if (!formData || !user) {
+      toast({
+          variant: "destructive",
+          title: 'Error',
+          description: 'User or form data is missing. Please try again.',
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -196,7 +214,7 @@ export default function SubmitPropertyPage() {
         // The submitted photos are data URIs. The property card component
         // currently uses image IDs. For now, we'll use placeholder images.
         imageIds: ['farmhouse-1-ext', 'farmhouse-1-int'],
-        ownerId: 'user-1', // Placeholder owner
+        ownerId: user.id, // Use logged-in user's ID
       };
 
       // Add property to the beginning of the list

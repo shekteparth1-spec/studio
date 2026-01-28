@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { Menu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,9 +12,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Logo } from '@/components/logo';
-
-// Mock authentication status
-const isAuthenticated = false; 
+import { useToast } from '@/hooks/use-toast';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -22,6 +22,43 @@ const navLinks = [
 ];
 
 export default function Header() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // This effect runs only on the client, after hydration
+    const user = localStorage.getItem('user');
+    setIsAuthenticated(!!user);
+
+    const handleStorageChange = () => {
+      const user = localStorage.getItem('user');
+      setIsAuthenticated(!!user);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check on focus in case localStorage changed in another tab
+    window.addEventListener('focus', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleStorageChange);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
+    router.push('/');
+    // Manually trigger a storage event to update other tabs
+    window.dispatchEvent(new Event('storage'));
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -69,7 +106,7 @@ export default function Header() {
               <Button variant="ghost" asChild>
                 <Link href='/dashboard'>Dashboard</Link>
               </Button>
-              <Button>Logout</Button>
+              <Button onClick={handleLogout}>Logout</Button>
             </>
           ) : (
             <>
@@ -82,7 +119,7 @@ export default function Header() {
             </>
           )}
            <Button variant="outline" asChild>
-            <Link href="/dashboard/submit-property">List your property</Link>
+            <Link href={isAuthenticated ? "/dashboard/submit-property" : "/login"}>List your property</Link>
           </Button>
         </div>
       </div>

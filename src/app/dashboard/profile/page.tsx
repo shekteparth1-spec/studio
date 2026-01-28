@@ -1,23 +1,34 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pen } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { users } from "@/lib/data";
+import { type User } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
 
-const user = users.find(u => u.id === 'user-1');
 
 export default function ProfilePage() {
   const { toast } = useToast();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
+
   if (!user) {
-    return <div>User not found.</div>;
+    return <div>Loading...</div>; // Or a skeleton loader
   }
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,6 +45,8 @@ export default function ProfilePage() {
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
+    // Here you would typically update the user data in your backend.
+    // For this demo, we'll just show a toast.
     toast({
         title: "Profile Updated",
         description: "Your profile information has been successfully updated.",

@@ -21,6 +21,7 @@ import { Logo } from '@/components/logo';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
 
 export default function DashboardLayout({
   children,
@@ -30,11 +31,21 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    const user = localStorage.getItem('user');
+    if (!user) {
+      router.replace('/login');
+    }
+  }, [router]);
 
   const handleLogout = () => {
+    localStorage.removeItem('user');
     toast({
-      title: 'Logged Out',
-      description: 'You have been successfully logged out.',
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
     });
     router.push('/login');
   };
@@ -44,6 +55,10 @@ export default function DashboardLayout({
     if (pathname === '/dashboard/profile') return 'My Profile';
     return 'User Dashboard';
   };
+  
+  if (!isClient) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <SidebarProvider>
