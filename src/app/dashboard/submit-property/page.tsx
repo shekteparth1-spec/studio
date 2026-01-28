@@ -143,8 +143,8 @@ export default function SubmitPropertyPage() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
     toast({
-      title: 'Success!',
-      description: 'Your property has been submitted for review.',
+      title: 'Payment Successful!',
+      description: 'Your property has been submitted for review after a payment of INR 50.',
     });
   }
 
@@ -396,8 +396,21 @@ export default function SubmitPropertyPage() {
                 </FormItem>
               )}
             />
+            
+            <Card className="bg-muted/50">
+                <CardHeader>
+                    <CardTitle className="font-headline text-xl">Listing Fee</CardTitle>
+                    <CardDescription>A one-time fee is required to list your property on our platform.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex justify-between items-center">
+                        <p className="text-muted-foreground">Amount to be paid</p>
+                        <p className="font-bold text-3xl">INR 50</p>
+                    </div>
+                </CardContent>
+            </Card>
 
-            <Button type="submit" size="lg" className="w-full sm:w-auto">Submit for Review</Button>
+            <Button type="submit" size="lg" className="w-full sm:w-auto">Pay &amp; Submit for Review</Button>
           </form>
         </Form>
       </CardContent>
