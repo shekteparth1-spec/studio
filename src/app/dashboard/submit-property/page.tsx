@@ -63,8 +63,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const UPI_ID = 'parthshekte1-1@gmail.com';
-const PAYEE_NAME = 'Harvest Haven';
+const YOUR_GOOGLE_PAY_UPI_ID = 'parthshekte1-1@gmail.com';
+const YOUR_PAYEE_NAME = 'Parth Shekte';
 const AMOUNT = 50;
 const NOTE = 'Farmhouse Registration Fee';
 
@@ -78,7 +78,7 @@ export default function SubmitPropertyPage() {
   const [formData, setFormData] = useState<FormValues | null>(null);
   const [utr, setUtr] = useState('');
 
-  const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent(NOTE)}`;
+  const upiUrl = `upi://pay?pa=${YOUR_GOOGLE_PAY_UPI_ID}&pn=${encodeURIComponent(YOUR_PAYEE_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent(NOTE)}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
 
 
@@ -233,7 +233,7 @@ export default function SubmitPropertyPage() {
                 </div>
                 <div className='space-y-2'>
                     <p className='text-sm text-muted-foreground'>Or use the UPI ID:</p>
-                    <p className='font-mono bg-muted px-3 py-1.5 rounded-md text-sm'>{UPI_ID}</p>
+                    <p className='font-mono bg-muted px-3 py-1.5 rounded-md text-sm'>{YOUR_GOOGLE_PAY_UPI_ID}</p>
                 </div>
                 <div className="text-lg font-bold">Amount: ₹{AMOUNT}</div>
                 <Alert variant="default" className="text-left">
