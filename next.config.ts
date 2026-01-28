@@ -36,6 +36,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  devIndicators: {
+    allowedDevOrigins: [
+      'https://*.cloudworkstations.dev',
+      'http://*.cloudworkstations.dev',
+    ],
+  },
 };
 
 export default nextConfig;
