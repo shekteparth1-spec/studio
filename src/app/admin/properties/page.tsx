@@ -20,8 +20,20 @@ import { properties } from '@/lib/data';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminPropertiesPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleEdit = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "The edit functionality is under development.",
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -71,8 +83,8 @@ export default function AdminPropertiesPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>View Listing</DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
                       <DropdownMenuItem className='text-destructive'>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
