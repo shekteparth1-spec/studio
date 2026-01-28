@@ -13,7 +13,6 @@ import { Logo } from '@/components/logo';
 
 // Mock authentication status
 const isAuthenticated = false; 
-const userRole = 'user'; // 'user' or 'admin'
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -68,7 +67,7 @@ export default function Header() {
           {isAuthenticated ? (
             <>
               <Button variant="ghost" asChild>
-                <Link href={userRole === 'admin' ? '/admin/dashboard' : '/dashboard'}>Dashboard</Link>
+                <Link href='/dashboard'>Dashboard</Link>
               </Button>
               <Button>Logout</Button>
             </>

@@ -18,7 +18,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: 'user';
   password?: string;
   phone?: string;
 };
@@ -26,7 +26,7 @@ export type User = {
 export const users: User[] = [
   { id: 'user-1', name: 'John Doe', email: 'john@example.com', role: 'user', password: 'password123', phone: '919876543210' },
   { id: 'user-2', name: 'Jane Smith', email: 'jane@example.com', role: 'user', password: 'password456', phone: '919876543211' },
-  { id: 'admin-1', name: 'Admin', email: 'admin@harvesthaven.com', role: 'admin', password: 'adminpassword', phone: '911234567890' },
+  { id: 'admin-1', name: 'Admin', email: 'admin@harvesthaven.com', role: 'user', password: 'adminpassword', phone: '911234567890' },
 ];
 
 export const properties: Property[] = [

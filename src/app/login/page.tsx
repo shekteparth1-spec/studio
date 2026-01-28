@@ -35,11 +35,7 @@ export default function LoginPage() {
         title: "Login Successful",
         description: `Welcome back, ${user.name}!`,
       })
-      if (user.role === 'admin') {
-        router.push('/admin/dashboard')
-      } else {
-        router.push('/dashboard')
-      }
+      router.push('/dashboard')
     } else {
       toast({
         variant: "destructive",
