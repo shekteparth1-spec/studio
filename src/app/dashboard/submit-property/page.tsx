@@ -228,6 +228,12 @@ export default function SubmitPropertyPage() {
                 </div>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-6 text-center">
+                 <Alert variant="destructive">
+                  <AlertTitle>QR Code Not Working?</AlertTitle>
+                  <AlertDescription>
+                    If you see a &quot;payment account not registered&quot; error, it means the UPI ID in the code is incorrect. Please open `src/app/dashboard/submit-property/page.tsx`, find the `YOUR_GOOGLE_PAY_UPI_ID` variable, and replace the value with the correct UPI ID from your Google Pay app.
+                  </AlertDescription>
+                </Alert>
                 <div className="p-4 bg-white rounded-lg border">
                     <Image src={qrCodeUrl} alt="UPI QR Code" width={250} height={250} />
                 </div>
