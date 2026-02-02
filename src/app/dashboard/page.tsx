@@ -29,17 +29,27 @@ export default function UserDashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const currentUser = JSON.parse(userData);
-      setUser(currentUser);
+    const loadData = () => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const currentUser = JSON.parse(userData);
+        setUser(currentUser);
 
-      const storedPropertiesRaw = localStorage.getItem('properties');
-      const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+        const storedPropertiesRaw = localStorage.getItem('properties');
+        const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
 
-      const filteredProperties = allProperties.filter((p: Property) => p.ownerId === currentUser.id);
-      setUserProperties(filteredProperties);
-    }
+        const filteredProperties = allProperties.filter((p: Property) => p.ownerId === currentUser.id);
+        setUserProperties(filteredProperties);
+      }
+    };
+    
+    loadData();
+    
+    window.addEventListener('storage', loadData);
+    
+    return () => {
+      window.removeEventListener('storage', loadData);
+    };
   }, []);
 
   if (!user) {

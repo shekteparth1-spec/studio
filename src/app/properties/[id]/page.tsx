@@ -20,7 +20,6 @@ import {
   Phone,
 } from 'lucide-react';
 import { properties as initialProperties, users, type Property } from '@/lib/data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import {
@@ -59,13 +58,22 @@ export default function PropertyDetailsPage({
   const [property, setProperty] = useState<Property | null | undefined>(null);
 
   useEffect(() => {
-    setIsAuthenticated(!!localStorage.getItem('user'));
-    
-    const storedPropertiesRaw = localStorage.getItem('properties');
-    const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
-    const foundProperty = allProperties.find((p: Property) => p.id === params.id);
-    setProperty(foundProperty);
+    const loadProperty = () => {
+      setIsAuthenticated(!!localStorage.getItem('user'));
+      
+      const storedPropertiesRaw = localStorage.getItem('properties');
+      const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+      const foundProperty = allProperties.find((p: Property) => p.id === params.id);
+      setProperty(foundProperty);
+    };
 
+    loadProperty();
+    
+    window.addEventListener('storage', loadProperty);
+    
+    return () => {
+      window.removeEventListener('storage', loadProperty);
+    };
   }, [params.id]);
 
 
@@ -107,10 +115,6 @@ export default function PropertyDetailsPage({
   }
 
   const owner = users.find((u) => u.id === property.ownerId);
-
-  const propertyImages = property.imageIds.map(
-    (id) => PlaceHolderImages.find((img) => img.id === id)!
-  );
 
   const handleBookingAction = (actionUrl: string, actionName: string) => {
     if (!isAuthenticated) {
@@ -158,15 +162,15 @@ export default function PropertyDetailsPage({
           <div className="mt-6">
             <Carousel className="w-full">
               <CarouselContent>
-                {propertyImages.map((image) => (
-                  <CarouselItem key={image.id}>
+                {property.imageUrls.map((url, index) => (
+                  <CarouselItem key={index}>
                     <div className="relative aspect-video w-full overflow-hidden rounded-lg">
                       <Image
-                        src={image.imageUrl}
-                        alt={image.description}
+                        src={url}
+                        alt={`${property.name} - image ${index + 1}`}
                         fill
                         className="object-cover"
-                        data-ai-hint={image.imageHint}
+                        data-ai-hint={property.imageHints?.[index] || 'property photo'}
                       />
                     </div>
                   </CarouselItem>

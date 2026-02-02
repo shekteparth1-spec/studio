@@ -21,18 +21,29 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { properties as initialProperties, type Property } from '@/lib/data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const [properties, setProperties] = useState<Property[]>([]);
 
   useEffect(() => {
-    const storedPropertiesRaw = localStorage.getItem('properties');
-    if (storedPropertiesRaw) {
-      setProperties(JSON.parse(storedPropertiesRaw));
-    }
+    const loadProperties = () => {
+        const storedPropertiesRaw = localStorage.getItem('properties');
+        if (storedPropertiesRaw) {
+            setProperties(JSON.parse(storedPropertiesRaw));
+        } else {
+            setProperties(initialProperties);
+        }
+    };
+    
+    loadProperties();
+
+    window.addEventListener('storage', loadProperties);
+
+    return () => {
+      window.removeEventListener('storage', loadProperties);
+    };
   }, []);
 
   return (
@@ -47,9 +58,13 @@ export default function PropertiesPage() {
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {properties
                 .map((property) => {
-                  const image = PlaceHolderImages.find(
-                    (img) => img.id === property.imageIds[0]
-                  );
+                  const imageUrl = property.imageUrls && property.imageUrls.length > 0
+                    ? property.imageUrls[0]
+                    : `https://picsum.photos/seed/${property.id}/600/400`;
+                  const imageHint = property.imageHints && property.imageHints.length > 0
+                    ? property.imageHints[0]
+                    : 'property photo';
+                    
                   return (
                     <Card
                       key={property.id}
@@ -58,15 +73,13 @@ export default function PropertiesPage() {
                       <CardHeader className="p-0">
                         <Link href={`/properties/${property.id}`}>
                           <div className="relative aspect-video w-full">
-                            {image && (
                               <Image
-                                src={image.imageUrl}
-                                alt={image.description}
+                                src={imageUrl}
+                                alt={property.name}
                                 fill
                                 className="object-cover transition-transform duration-300 hover:scale-105"
-                                data-ai-hint={image.imageHint}
+                                data-ai-hint={imageHint}
                               />
-                            )}
                           </div>
                         </Link>
                       </CardHeader>

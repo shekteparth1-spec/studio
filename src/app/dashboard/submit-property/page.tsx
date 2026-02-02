@@ -60,7 +60,7 @@ const formSchema = z.object({
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
   description: z.string().min(50, 'Description must be at least 50 characters.'),
   amenities: z.array(z.string()),
-  photos: z.array(z.string()).optional(),
+  photos: z.array(z.string()).min(1, "Please upload at least one photo."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -202,18 +202,17 @@ export default function SubmitPropertyPage() {
       
       const newProperty: Property = {
         id: `prop-${Date.now()}`,
-        name: formData!.name,
-        type: formData!.type,
-        location: formData!.location,
-        pricePerNight: formData!.pricePerNight,
-        bedrooms: formData!.bedrooms,
-        squareFeet: formData!.squareFeet,
+        name: formData.name,
+        type: formData.type,
+        location: formData.location,
+        pricePerNight: formData.pricePerNight,
+        bedrooms: formData.bedrooms,
+        squareFeet: formData.squareFeet,
         rating: 0, // New properties have 0 rating initially
-        description: formData!.description,
-        amenities: formData!.amenities,
-        // The submitted photos are data URIs. The property card component
-        // currently uses image IDs. For now, we'll use placeholder images.
-        imageIds: ['farmhouse-1-ext', 'farmhouse-1-int'],
+        description: formData.description,
+        amenities: formData.amenities,
+        imageUrls: formData.photos || [],
+        imageHints: [], // User-uploaded photos don't have hints
         ownerId: user.id, // Use logged-in user's ID
       };
 
@@ -221,6 +220,9 @@ export default function SubmitPropertyPage() {
       const currentProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
       currentProperties.unshift(newProperty);
       localStorage.setItem('properties', JSON.stringify(currentProperties));
+
+      // Manually trigger a storage event to update other components that display properties
+      window.dispatchEvent(new Event('storage'));
 
       toast({
         title: 'Payment Confirmed!',

@@ -41,8 +41,8 @@ import { useToast } from '@/hooks/use-toast';
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-barn');
   
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
-  const [sourceProperties, setSourceProperties] = useState<Property[]>(initialProperties);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [sourceProperties, setSourceProperties] = useState<Property[]>([]);
   const [location, setLocation] = useState('');
   const [propertyType, setPropertyType] = useState('any');
   const [priceRange, setPriceRange] = useState([1000, 100000]);
@@ -58,11 +58,21 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const storedPropertiesRaw = localStorage.getItem('properties');
-    if (storedPropertiesRaw) {
-      const storedProperties = JSON.parse(storedPropertiesRaw);
-      setSourceProperties(storedProperties);
-    }
+    const loadProperties = () => {
+      const storedPropertiesRaw = localStorage.getItem('properties');
+      const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+      setSourceProperties(allProperties);
+    };
+
+    loadProperties(); // Initial load
+
+    // Add event listener to reload properties when storage changes
+    window.addEventListener('storage', loadProperties);
+
+    // Cleanup listener on component unmount
+    return () => {
+      window.removeEventListener('storage', loadProperties);
+    };
   }, []);
 
   useEffect(() => {
@@ -216,9 +226,13 @@ export default function Home() {
             {properties.length > 0 ? (
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {properties.map((property) => {
-                    const image = PlaceHolderImages.find(
-                      (img) => img.id === property.imageIds[0]
-                    );
+                    const imageUrl = property.imageUrls && property.imageUrls.length > 0
+                      ? property.imageUrls[0]
+                      : `https://picsum.photos/seed/${property.id}/600/400`;
+                    const imageHint = property.imageHints && property.imageHints.length > 0
+                      ? property.imageHints[0]
+                      : 'property photo';
+
                     return (
                       <Card
                         key={property.id}
@@ -227,15 +241,13 @@ export default function Home() {
                         <CardHeader className="p-0">
                           <Link href={`/properties/${property.id}`}>
                             <div className="relative aspect-video w-full">
-                              {image && (
                                 <Image
-                                  src={image.imageUrl}
-                                  alt={image.description}
+                                  src={imageUrl}
+                                  alt={property.name}
                                   fill
                                   className="object-cover transition-transform duration-300 hover:scale-105"
-                                  data-ai-hint={image.imageHint}
+                                  data-ai-hint={imageHint}
                                 />
-                              )}
                             </div>
                           </Link>
                         </CardHeader>
