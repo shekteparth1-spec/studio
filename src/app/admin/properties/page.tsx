@@ -56,7 +56,9 @@ export default function AdminPropertiesPage() {
     if (!confirm('Are you sure you want to delete this property? This action is permanent.')) {
         return;
     }
-    const updatedProperties = properties.filter((p) => p.id !== propertyId);
+    const storedPropertiesRaw = localStorage.getItem('properties');
+    const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+    const updatedProperties = allProperties.filter((p: Property) => p.id !== propertyId);
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
     window.dispatchEvent(new Event('storage')); // Triggers update on all pages
     toast({
