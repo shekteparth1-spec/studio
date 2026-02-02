@@ -1,7 +1,7 @@
 'use client'; // Make this a client component
 
 import Image from 'next/image';
-import { notFound, useRouter } from 'next/navigation'; // import useRouter
+import { notFound, useRouter, useParams } from 'next/navigation'; // import useRouter
 import React, { useState, useEffect } from 'react'; // import hooks
 import {
   Star,
@@ -47,11 +47,8 @@ const amenityIcons: { [key: string]: React.ReactNode } = {
   restaurant: <Utensils size={20} />,
 };
 
-export default function PropertyDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function PropertyDetailsPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -63,8 +60,10 @@ export default function PropertyDetailsPage({
       
       const storedPropertiesRaw = localStorage.getItem('properties');
       const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
-      const foundProperty = allProperties.find((p: Property) => p.id === params.id);
-      setProperty(foundProperty);
+      if (params.id) {
+        const foundProperty = allProperties.find((p: Property) => p.id === params.id);
+        setProperty(foundProperty);
+      }
     };
 
     loadProperty();
