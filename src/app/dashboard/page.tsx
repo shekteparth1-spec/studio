@@ -22,11 +22,13 @@ import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 export default function UserDashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [userProperties, setUserProperties] = useState<Property[]>([]);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadData = () => {
@@ -51,6 +53,24 @@ export default function UserDashboardPage() {
       window.removeEventListener('storage', loadData);
     };
   }, []);
+
+  const handleDelete = (propertyId: string) => {
+    if (!confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
+        return;
+    }
+
+    const storedPropertiesRaw = localStorage.getItem('properties');
+    const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+    const updatedProperties = allProperties.filter((p: Property) => p.id !== propertyId);
+    
+    localStorage.setItem('properties', JSON.stringify(updatedProperties));
+    window.dispatchEvent(new Event('storage')); // To update UI everywhere
+
+    toast({
+        title: 'Property Deleted',
+        description: 'The property has been removed from your listings.',
+    });
+  };
 
   if (!user) {
     return <div>Loading...</div>
@@ -90,7 +110,10 @@ export default function UserDashboardPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
-                        <DropdownMenuItem className='text-destructive'>Delete</DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className='text-destructive'
+                          onClick={() => handleDelete(property.id)}
+                        >Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

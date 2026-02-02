@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -16,21 +17,51 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { properties } from '@/lib/data';
+import { properties as initialProperties, users as staticUsers, type Property } from '@/lib/data';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 export default function AdminPropertiesPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [properties, setProperties] = useState<Property[]>([]);
+
+  useEffect(() => {
+    const loadProperties = () => {
+      const storedPropertiesRaw = localStorage.getItem('properties');
+      setProperties(storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties);
+    };
+
+    loadProperties();
+    window.addEventListener('storage', loadProperties);
+
+    return () => {
+      window.removeEventListener('storage', loadProperties);
+    };
+  }, []);
 
   const handleEdit = () => {
     toast({
       title: "Coming Soon!",
       description: "The edit functionality is under development.",
+    });
+  };
+
+  const handleDelete = (propertyId: string) => {
+    if (!confirm('Are you sure you want to delete this property? This action is permanent.')) {
+        return;
+    }
+    const updatedProperties = properties.filter((p) => p.id !== propertyId);
+    localStorage.setItem('properties', JSON.stringify(updatedProperties));
+    window.dispatchEvent(new Event('storage')); // Triggers update on all pages
+    toast({
+        title: 'Property Deleted',
+        description: 'The property has been successfully removed.',
     });
   };
 
@@ -47,31 +78,28 @@ export default function AdminPropertiesPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Owner ID</TableHead>
+              <TableHead>Owner</TableHead>
               <TableHead>Price</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {properties.map((property) => (
+            {properties.map((property) => {
+              const registeredUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
+              const allUsers = [...staticUsers, ...registeredUsers];
+              const owner = allUsers.find(u => u.id === property.ownerId);
+              return(
               <TableRow key={property.id}>
                 <TableCell className="font-medium">{property.name}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      property.status === 'approved'
-                        ? 'default'
-                        : property.status === 'pending'
-                        ? 'secondary'
-                        : 'destructive'
-                    }
-                    className={property.status === 'approved' ? 'bg-green-500/20 text-green-700 border-green-500/20' : ''}
-                  >
-                    {property.status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                     <Avatar className="h-8 w-8">
+                       <AvatarImage src={`https://i.pravatar.cc/40?u=${owner?.id}`} />
+                       <AvatarFallback>{owner?.name?.charAt(0) || 'U'}</AvatarFallback>
+                     </Avatar>
+                     <span>{owner?.name}</span>
+                  </div>
                 </TableCell>
-                <TableCell>{property.ownerId}</TableCell>
                 <TableCell>INR {property.pricePerNight}/night</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -85,12 +113,15 @@ export default function AdminPropertiesPage() {
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
-                      <DropdownMenuItem className='text-destructive'>Delete</DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className='text-destructive'
+                        onClick={() => handleDelete(property.id)}
+                      >Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </CardContent>
