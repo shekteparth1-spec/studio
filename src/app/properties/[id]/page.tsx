@@ -19,7 +19,7 @@ import {
   Map,
   Phone,
 } from 'lucide-react';
-import { properties, users } from '@/lib/data';
+import { properties as initialProperties, users, type Property } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -35,6 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const amenityIcons: { [key: string]: React.ReactNode } = {
   wifi: <Wifi size={20} />,
@@ -55,15 +56,54 @@ export default function PropertyDetailsPage({
   const router = useRouter();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+  const [property, setProperty] = useState<Property | null | undefined>(null);
+
   useEffect(() => {
     setIsAuthenticated(!!localStorage.getItem('user'));
-  }, []);
+    
+    const storedPropertiesRaw = localStorage.getItem('properties');
+    const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+    const foundProperty = allProperties.find((p: Property) => p.id === params.id);
+    setProperty(foundProperty);
 
-  const property = properties.find((p) => p.id === params.id);
+  }, [params.id]);
 
-  if (!property) {
+
+  if (property === undefined) {
     notFound();
+  }
+  
+  if (property === null) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 bg-background">
+          <div className="container mx-auto py-12">
+            <Skeleton className="h-10 w-3/4" />
+            <Skeleton className="mt-2 h-6 w-1/2" />
+            <Skeleton className="mt-6 aspect-video w-full rounded-lg" />
+             <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-6">
+                    <Skeleton className="h-8 w-1/2" />
+                    <Skeleton className="h-6 w-1/3" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-8 w-1/3" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Skeleton className="h-6 w-full" />
+                        <Skeleton className="h-6 w-full" />
+                        <Skeleton className="h-6 w-full" />
+                        <Skeleton className="h-6 w-full" />
+                    </div>
+                </div>
+                <div className="lg:col-span-1">
+                    <Skeleton className="h-48 w-full sticky top-24" />
+                </div>
+             </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   const owner = users.find((u) => u.id === property.ownerId);

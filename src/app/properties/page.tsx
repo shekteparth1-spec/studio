@@ -1,5 +1,8 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
 import {
   BedDouble,
   MapPin,
@@ -17,12 +20,21 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { properties } from '@/lib/data';
+import { properties as initialProperties, type Property } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 
 export default function PropertiesPage() {
+  const [properties, setProperties] = useState<Property[]>(initialProperties);
+
+  useEffect(() => {
+    const storedPropertiesRaw = localStorage.getItem('properties');
+    if (storedPropertiesRaw) {
+      setProperties(JSON.parse(storedPropertiesRaw));
+    }
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />

@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { properties as allProperties, type Property } from '@/lib/data';
+import { properties as initialProperties, type Property } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -41,7 +41,8 @@ import { useToast } from '@/hooks/use-toast';
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-barn');
   
-  const [properties, setProperties] = useState<Property[]>(allProperties);
+  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const [sourceProperties, setSourceProperties] = useState<Property[]>(initialProperties);
   const [location, setLocation] = useState('');
   const [propertyType, setPropertyType] = useState('any');
   const [priceRange, setPriceRange] = useState([1000, 100000]);
@@ -57,7 +58,15 @@ export default function Home() {
   };
 
   useEffect(() => {
-    let filtered = allProperties;
+    const storedPropertiesRaw = localStorage.getItem('properties');
+    if (storedPropertiesRaw) {
+      const storedProperties = JSON.parse(storedPropertiesRaw);
+      setSourceProperties(storedProperties);
+    }
+  }, []);
+
+  useEffect(() => {
+    let filtered = sourceProperties;
 
     if (location) {
       filtered = filtered.filter(p => p.location.toLowerCase().includes(location.toLowerCase()));
@@ -80,7 +89,7 @@ export default function Home() {
     filtered = filtered.filter(p => p.squareFeet >= areaRange[0] && p.squareFeet <= areaRange[1]);
 
     setProperties(filtered);
-  }, [location, propertyType, priceRange, bedrooms, areaRange]);
+  }, [location, propertyType, priceRange, bedrooms, areaRange, sourceProperties]);
 
 
   return (

@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { properties, type Property, type User } from '@/lib/data';
+import { properties as initialProperties, type Property, type User } from '@/lib/data';
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -217,8 +217,10 @@ export default function SubmitPropertyPage() {
         ownerId: user.id, // Use logged-in user's ID
       };
 
-      // Add property to the beginning of the list
-      properties.unshift(newProperty);
+      const storedPropertiesRaw = localStorage.getItem('properties');
+      const currentProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+      currentProperties.unshift(newProperty);
+      localStorage.setItem('properties', JSON.stringify(currentProperties));
 
       toast({
         title: 'Payment Confirmed!',

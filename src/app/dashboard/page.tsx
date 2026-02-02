@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { properties, type Property, type User } from '@/lib/data';
+import { properties as initialProperties, type Property, type User } from '@/lib/data';
 import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import React, { useState, useEffect } from 'react';
@@ -33,7 +33,11 @@ export default function UserDashboardPage() {
     if (userData) {
       const currentUser = JSON.parse(userData);
       setUser(currentUser);
-      const filteredProperties = properties.filter(p => p.ownerId === currentUser.id);
+
+      const storedPropertiesRaw = localStorage.getItem('properties');
+      const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+
+      const filteredProperties = allProperties.filter((p: Property) => p.ownerId === currentUser.id);
       setUserProperties(filteredProperties);
     }
   }, []);
