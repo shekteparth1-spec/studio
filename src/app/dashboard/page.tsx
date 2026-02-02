@@ -64,6 +64,12 @@ export default function UserDashboardPage() {
     const updatedProperties = allProperties.filter((p: Property) => p.id !== propertyId);
     
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
+    
+    if(user) {
+        const filteredForUser = updatedProperties.filter(p => p.ownerId === user.id);
+        setUserProperties(filteredForUser);
+    }
+
     window.dispatchEvent(new Event('storage')); // To update UI everywhere
 
     toast({

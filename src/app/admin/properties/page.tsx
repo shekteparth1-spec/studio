@@ -59,8 +59,12 @@ export default function AdminPropertiesPage() {
     const storedPropertiesRaw = localStorage.getItem('properties');
     const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
     const updatedProperties = allProperties.filter((p: Property) => p.id !== propertyId);
+    
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
-    window.dispatchEvent(new Event('storage')); // Triggers update on all pages
+    setProperties(updatedProperties); // Directly update the state for immediate UI change
+    
+    window.dispatchEvent(new Event('storage')); // Triggers update on other open pages
+    
     toast({
         title: 'Property Deleted',
         description: 'The property has been successfully removed.',
