@@ -32,7 +32,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 export default function UserDashboardPage() {
@@ -40,6 +39,7 @@ export default function UserDashboardPage() {
   const [userProperties, setUserProperties] = useState<Property[]>([]);
   const router = useRouter();
   const { toast } = useToast();
+  const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = () => {
@@ -83,6 +83,7 @@ export default function UserDashboardPage() {
         title: 'Property Deleted',
         description: 'The property has been removed from your listings.',
     });
+    setPropertyToDelete(null);
   };
 
   if (!user) {
@@ -90,84 +91,85 @@ export default function UserDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">My Properties</CardTitle>
-          <CardDescription>
-            A list of properties you have submitted.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {userProperties.length > 0 ? userProperties.map((property) => (
-                <TableRow key={property.id}>
-                  <TableCell className="font-medium">{property.name}</TableCell>
-                  <TableCell>INR {property.pricePerNight}/night</TableCell>
-                  <TableCell className="text-right">
-                    <AlertDialog>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
-                          <AlertDialogTrigger asChild>
+    <>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline">My Properties</CardTitle>
+            <CardDescription>
+              A list of properties you have submitted.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {userProperties.length > 0 ? userProperties.map((property) => (
+                  <TableRow key={property.id}>
+                    <TableCell className="font-medium">{property.name}</TableCell>
+                    <TableCell>INR {property.pricePerNight}/night</TableCell>
+                    <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
                             <DropdownMenuItem 
                               className='text-destructive'
-                              onSelect={(e) => e.preventDefault()}
+                              onClick={() => setPropertyToDelete(property.id)}
                             >Delete</DropdownMenuItem>
-                          </AlertDialogTrigger>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your
-                            property and remove it from your listings.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(property.id)}>Continue</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              )) : (
-                 <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">
-                        You haven't listed any properties yet.
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                     </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-       {userProperties.length === 0 && (
-          <div className="text-center p-8 border-dashed border-2 rounded-lg">
-            <h3 className="font-headline text-lg">No properties found</h3>
-            <p className="text-muted-foreground mt-1">Get started by listing your first property.</p>
-            <Button asChild className="mt-4">
-              <Link href="/dashboard/submit-property">List a Property</Link>
-            </Button>
-          </div>
-        )}
-    </div>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                      <TableCell colSpan={3} className="h-24 text-center">
+                          You haven't listed any properties yet.
+                      </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        {userProperties.length === 0 && (
+            <div className="text-center p-8 border-dashed border-2 rounded-lg">
+              <h3 className="font-headline text-lg">No properties found</h3>
+              <p className="text-muted-foreground mt-1">Get started by listing your first property.</p>
+              <Button asChild className="mt-4">
+                <Link href="/dashboard/submit-property">List a Property</Link>
+              </Button>
+            </div>
+          )}
+      </div>
+
+      <AlertDialog open={!!propertyToDelete} onOpenChange={(open) => !open && setPropertyToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              property and remove it from your listings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => propertyToDelete && handleDelete(propertyToDelete)}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
