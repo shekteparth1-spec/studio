@@ -16,7 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { properties as initialProperties, users as staticUsers, type Property } from '@/lib/data';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -69,7 +68,6 @@ export default function AdminPropertiesPage() {
     const updatedProperties = allProperties.filter((p: Property) => p.id !== propertyId);
     
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
-    setProperties(updatedProperties);
     
     window.dispatchEvent(new Event('storage'));
     
