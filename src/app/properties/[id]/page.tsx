@@ -161,7 +161,7 @@ export default function PropertyDetailsPage() {
           <div className="mt-6">
             <Carousel className="w-full">
               <CarouselContent>
-                {property.imageUrls.map((url, index) => (
+                {property.imageUrls && property.imageUrls.map((url, index) => (
                   <CarouselItem key={index}>
                     <div className="relative aspect-video w-full overflow-hidden rounded-lg">
                       <Image
