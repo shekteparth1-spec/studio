@@ -69,6 +69,10 @@ export default function AdminPropertiesPage() {
     
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
     
+    // Directly update state for immediate UI feedback
+    setProperties(updatedProperties);
+    
+    // Dispatch event for other tabs/components
     window.dispatchEvent(new Event('storage'));
     
     toast({

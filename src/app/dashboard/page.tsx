@@ -72,6 +72,10 @@ export default function UserDashboardPage() {
     
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
     
+    // Directly update state for immediate UI feedback
+    setUserProperties(updatedProperties.filter(p => p.ownerId === user?.id));
+
+    // Dispatch event for other tabs/components
     window.dispatchEvent(new Event('storage'));
 
     toast({
