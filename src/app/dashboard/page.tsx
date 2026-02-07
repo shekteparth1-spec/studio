@@ -23,6 +23,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function UserDashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -55,10 +66,6 @@ export default function UserDashboardPage() {
   }, []);
 
   const handleDelete = (propertyId: string) => {
-    if (!confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
-        return;
-    }
-
     const storedPropertiesRaw = localStorage.getItem('properties');
     const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
     const updatedProperties = allProperties.filter((p: Property) => p.id !== propertyId);
@@ -70,7 +77,7 @@ export default function UserDashboardPage() {
         setUserProperties(filteredForUser);
     }
 
-    window.dispatchEvent(new Event('storage')); // To update UI everywhere
+    window.dispatchEvent(new Event('storage'));
 
     toast({
         title: 'Property Deleted',
@@ -106,22 +113,39 @@ export default function UserDashboardPage() {
                   <TableCell className="font-medium">{property.name}</TableCell>
                   <TableCell>INR {property.pricePerNight}/night</TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className='text-destructive'
-                          onClick={() => handleDelete(property.id)}
-                        >Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <AlertDialog>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem 
+                              className='text-destructive'
+                              onSelect={(e) => e.preventDefault()}
+                            >Delete</DropdownMenuItem>
+                          </AlertDialogTrigger>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your
+                            property and remove it from your listings.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(property.id)}>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               )) : (
