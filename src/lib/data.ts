@@ -23,6 +23,7 @@ export type Property = {
   imageUrls: string[];
   imageHints: string[];
   ownerId: string;
+  status: 'pending' | 'approved' | 'rejected';
 };
 
 export type User = {
@@ -54,6 +55,7 @@ export const properties: Property[] = [
     imageUrls: [getImageUrl('farmhouse-1-ext'), getImageUrl('farmhouse-1-int')],
     imageHints: [getImageHint('farmhouse-1-ext'), getImageHint('farmhouse-1-int')],
     ownerId: 'user-1',
+    status: 'approved',
   },
   {
     id: 'prop-2',
@@ -69,6 +71,7 @@ export const properties: Property[] = [
     imageUrls: [getImageUrl('resort-1-pool'), getImageUrl('resort-1-room')],
     imageHints: [getImageHint('resort-1-pool'), getImageHint('resort-1-room')],
     ownerId: 'user-2',
+    status: 'approved',
   },
   {
     id: 'prop-3',
@@ -84,6 +87,7 @@ export const properties: Property[] = [
     imageUrls: [getImageUrl('cabin-1-exterior'), getImageUrl('farmhouse-3-bedroom')],
     imageHints: [getImageHint('cabin-1-exterior'), getImageHint('farmhouse-3-bedroom')],
     ownerId: 'user-1',
+    status: 'approved',
   },
     {
     id: 'prop-4',
@@ -99,6 +103,7 @@ export const properties: Property[] = [
     imageUrls: [getImageUrl('villa-1-exterior'), getImageUrl('farmhouse-2-kitchen')],
     imageHints: [getImageHint('villa-1-exterior'), getImageHint('farmhouse-2-kitchen')],
     ownerId: 'user-2',
+    status: 'approved',
   },
   {
     id: 'prop-5',
@@ -114,6 +119,7 @@ export const properties: Property[] = [
     imageUrls: [getImageUrl('farmhouse-2-kitchen'), getImageUrl('farmhouse-3-bedroom')],
     imageHints: [getImageHint('farmhouse-2-kitchen'), getImageHint('farmhouse-3-bedroom')],
     ownerId: 'user-1',
+    status: 'approved',
   },
     {
     id: 'prop-6',
@@ -129,5 +135,6 @@ export const properties: Property[] = [
     imageUrls: [getImageUrl('resort-2-spa'), getImageUrl('resort-3-lobby')],
     imageHints: [getImageHint('resort-2-spa'), getImageHint('resort-3-lobby')],
     ownerId: 'user-2',
+    status: 'approved',
   },
 ];

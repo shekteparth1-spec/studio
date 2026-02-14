@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -24,13 +24,30 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboardPage() {
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const [properties, setProperties] = useState<Property[]>([]);
   const { toast } = useToast();
 
+  useEffect(() => {
+    const loadProperties = () => {
+      const storedPropertiesRaw = localStorage.getItem('properties');
+      setProperties(storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties);
+    };
+
+    loadProperties();
+    window.addEventListener('storage', loadProperties);
+
+    return () => {
+      window.removeEventListener('storage', loadProperties);
+    };
+  }, []);
+
   const handleStatusChange = (propertyId: string, status: 'approved' | 'rejected') => {
-    setProperties(properties.map(p =>
+    const updatedProperties = properties.map(p =>
       p.id === propertyId ? { ...p, status } : p
-    ));
+    );
+    setProperties(updatedProperties);
+    localStorage.setItem('properties', JSON.stringify(updatedProperties));
+    window.dispatchEvent(new Event('storage'));
 
     if (status === 'approved') {
       toast({

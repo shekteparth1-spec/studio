@@ -66,7 +66,7 @@ const formSchema = z.object({
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
   description: z.string().min(50, 'Description must be at least 50 characters.'),
   amenities: z.array(z.string()),
-  photos: z.array(z.string()).min(1, "Please upload at least one photo."),
+  photos: z.array(z.string()),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -193,6 +193,7 @@ export default function SubmitPropertyPage() {
         imageUrls: values.photos,
         imageHints: [], // User-uploaded photos don't have hints
         ownerId: user.id,
+        status: 'pending',
       };
 
       const storedPropertiesRaw = localStorage.getItem('properties');
@@ -203,10 +204,10 @@ export default function SubmitPropertyPage() {
 
       toast({
         title: 'Payment Successful!',
-        description: `Your property is now live! Payment ID: ${paymentId}`,
+        description: `Your property has been submitted for review. Payment ID: ${paymentId}`,
       });
       
-      router.push('/');
+      router.push('/dashboard');
 
     } catch (error) {
       console.error("Submission failed:", error);
