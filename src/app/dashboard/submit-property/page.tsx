@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Sparkles, Loader2, Upload, X, ArrowLeft } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -16,7 +16,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +39,13 @@ import {
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { properties as initialProperties, type Property, type User } from '@/lib/data';
+
+// Add this for Razorpay window object
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -65,10 +71,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const YOUR_GOOGLE_PAY_UPI_ID = 'parthshekte1-1@oksbi';
-const YOUR_PAYEE_NAME = 'Parth Shekte';
-const AMOUNT = 50;
-const NOTE = 'Farmhouse Registration Fee';
+const YOUR_RAZORPAY_KEY_ID = 'rzp_test_YOUR_KEY_HERE'; // IMPORTANT: Replace with your Razorpay Test Key ID
+const AMOUNT = 50; // One-time fee in INR
 
 export default function SubmitPropertyPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -76,10 +80,6 @@ export default function SubmitPropertyPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
   const router = useRouter();
-  
-  const [submissionStep, setSubmissionStep] = useState<'form' | 'payment' | 'confirmation'>('form');
-  const [formData, setFormData] = useState<FormValues | null>(null);
-  const [utr, setUtr] = useState('');
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -89,10 +89,6 @@ export default function SubmitPropertyPage() {
     }
     // The dashboard layout handles redirection if the user is not logged in.
   }, []);
-
-  const upiUrl = `upi://pay?pa=${YOUR_GOOGLE_PAY_UPI_ID}&pn=${encodeURIComponent(YOUR_PAYEE_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent(NOTE)}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
-
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -170,73 +166,46 @@ export default function SubmitPropertyPage() {
   };
 
 
-  function onFormSubmit(values: FormValues) {
-    setFormData(values);
-    setSubmissionStep('payment');
-  }
-
-  async function handleFinalSubmit() {
-    if (!utr || utr.trim().length < 12) {
-        toast({
-            variant: "destructive",
-            title: 'Invalid UTR',
-            description: 'Please enter a valid UPI Transaction ID (UTR).',
-        });
-        return;
-    }
-    
-    if (!formData || !user) {
+  async function handleFinalSubmit(values: FormValues, paymentId: string) {
+    if (!user) {
       toast({
           variant: "destructive",
           title: 'Error',
-          description: 'User or form data is missing. Please try again.',
+          description: 'User data is missing. Please log in and try again.',
       });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // In a real app, you would verify the UTR with your payment gateway.
-      // Here we simulate a delay.
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      // In a real app, you would verify the payment on your backend.
       const newProperty: Property = {
         id: `prop-${Date.now()}`,
-        name: formData.name,
-        type: formData.type,
-        location: formData.location,
-        pricePerNight: formData.pricePerNight,
-        bedrooms: formData.bedrooms,
-        squareFeet: formData.squareFeet,
-        rating: 0, // New properties have 0 rating initially
-        description: formData.description,
-        amenities: formData.amenities,
-        imageUrls: formData.photos || [],
+        name: values.name,
+        type: values.type,
+        location: values.location,
+        pricePerNight: values.pricePerNight,
+        bedrooms: values.bedrooms,
+        squareFeet: values.squareFeet,
+        rating: 0,
+        description: values.description,
+        amenities: values.amenities,
+        imageUrls: values.photos,
         imageHints: [], // User-uploaded photos don't have hints
-        ownerId: user.id, // Use logged-in user's ID
+        ownerId: user.id,
       };
 
       const storedPropertiesRaw = localStorage.getItem('properties');
       const currentProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
       currentProperties.unshift(newProperty);
       localStorage.setItem('properties', JSON.stringify(currentProperties));
-
-      // Manually trigger a storage event to update other components that display properties
       window.dispatchEvent(new Event('storage'));
 
       toast({
-        title: 'Payment Confirmed!',
-        description: 'Your property is now live on Harvest Haven!',
+        title: 'Payment Successful!',
+        description: `Your property is now live! Payment ID: ${paymentId}`,
       });
       
-      // Reset everything
-      form.reset();
-      setImagePreviews([]);
-      setFormData(null);
-      setUtr('');
-      setSubmissionStep('form');
-
-      // Redirect to see the new property
       router.push('/');
 
     } catch (error) {
@@ -251,92 +220,62 @@ export default function SubmitPropertyPage() {
     }
   }
 
-  if (submissionStep === 'payment') {
-    return (
-        <Card>
-            <CardHeader>
-                <div className='flex items-center gap-4'>
-                    <Button variant="ghost" size="icon" onClick={() => setSubmissionStep('form')}>
-                        <ArrowLeft />
-                    </Button>
-                    <div>
-                        <CardTitle className="font-headline">Complete Your Payment</CardTitle>
-                        <CardDescription>Scan the QR code using any UPI app.</CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-6 text-center">
-                 <Alert variant="destructive">
-                  <AlertTitle>QR Code Not Working?</AlertTitle>
-                  <AlertDescription>
-                    If you see a &quot;payment account not registered&quot; error, it means the UPI ID in the code is incorrect. Please open `src/app/dashboard/submit-property/page.tsx`, find the `YOUR_GOOGLE_PAY_UPI_ID` variable, and replace the value with the correct UPI ID from your Google Pay app.
-                  </AlertDescription>
-                </Alert>
-                <div className="p-4 bg-white rounded-lg border">
-                    <Image src={qrCodeUrl} alt="UPI QR Code" width={250} height={250} />
-                </div>
-                <div className='space-y-2'>
-                    <p className='text-sm text-muted-foreground'>Or use the UPI ID:</p>
-                    <p className='font-mono bg-muted px-3 py-1.5 rounded-md text-sm'>{YOUR_GOOGLE_PAY_UPI_ID}</p>
-                </div>
-                <div className="text-lg font-bold">Amount: ₹{AMOUNT}</div>
-                <Alert variant="default" className="text-left">
-                    <AlertTitle className="font-semibold">Important Information</AlertTitle>
-                    <AlertDescription className="text-muted-foreground">
-                        <ul className="list-disc pl-4 mt-2 space-y-1">
-                            <li>Payment is non-refundable.</li>
-                            <li>Your farmhouse will be listed only after successful payment and confirmation.</li>
-                            <li>Please save the UPI Transaction ID (UTR) after payment.</li>
-                        </ul>
-                    </AlertDescription>
-                </Alert>
-            </CardContent>
-            <CardFooter className="flex-col gap-4">
-                 <Button size="lg" className="w-full" onClick={() => setSubmissionStep('confirmation')}>I Have Paid</Button>
-            </CardFooter>
-        </Card>
-    );
+
+  function onFormSubmit(values: FormValues) {
+    if (YOUR_RAZORPAY_KEY_ID === 'rzp_test_YOUR_KEY_HERE') {
+      toast({
+        variant: "destructive",
+        title: 'Razorpay Key Not Configured',
+        description: "Please replace the placeholder Razorpay key in the site's code to enable payments.",
+      });
+      return;
+    }
+    
+    if (!window.Razorpay) {
+      toast({
+        variant: "destructive",
+        title: "Razorpay Not Loaded",
+        description: "Please check your internet connection or try refreshing the page.",
+      });
+      return;
+    }
+
+    const options = {
+      key: YOUR_RAZORPAY_KEY_ID,
+      amount: AMOUNT * 100, // Razorpay expects amount in the smallest currency unit (paise)
+      currency: "INR",
+      name: "Harvest Haven",
+      description: "Property Listing Fee",
+      image: "https://cdn.iconscout.com/icon/premium/png-256-thumb/leaf-7527637-6138942.png",
+      handler: async (response: any) => {
+        await handleFinalSubmit(values, response.razorpay_payment_id);
+      },
+      prefill: {
+        name: user?.name,
+        email: user?.email,
+      },
+      notes: {
+        property_name: values.name,
+      },
+      theme: {
+        color: "#9A7B4F"
+      }
+    };
+    const rzp = new window.Razorpay(options);
+    
+    rzp.on('payment.failed', function (response: any){
+        toast({
+            variant: "destructive",
+            title: 'Payment Failed',
+            description: response.error.description,
+        });
+        setIsSubmitting(false);
+    });
+
+    setIsSubmitting(true);
+    rzp.open();
   }
-
-  if (submissionStep === 'confirmation') {
-      return (
-        <Card>
-            <CardHeader>
-                 <div className='flex items-center gap-4'>
-                    <Button variant="ghost" size="icon" onClick={() => setSubmissionStep('payment')}>
-                        <ArrowLeft />
-                    </Button>
-                    <div>
-                        <CardTitle className="font-headline">Confirm Your Submission</CardTitle>
-                        <CardDescription>Enter the transaction ID to finalize your listing.</CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="utr">UPI Transaction ID (UTR)</Label>
-                    <Input 
-                        id="utr" 
-                        placeholder="Enter the 12-digit UTR"
-                        value={utr}
-                        onChange={(e) => setUtr(e.target.value)}
-                    />
-                     <p className="text-xs text-muted-foreground">
-                        You can find this in the transaction history of your UPI app.
-                    </p>
-                </div>
-            </CardContent>
-            <CardFooter>
-                <Button size="lg" className="w-full" onClick={handleFinalSubmit} disabled={isSubmitting}>
-                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Confirm & List Property
-                </Button>
-            </CardFooter>
-        </Card>
-      )
-  }
-
-
+  
   return (
     <Card>
       <CardHeader>
@@ -346,6 +285,12 @@ export default function SubmitPropertyPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+         <Alert variant="destructive" className='mb-6'>
+          <AlertTitle>Developer Note: Setup Required</AlertTitle>
+          <AlertDescription>
+            To enable payments, open `src/app/dashboard/submit-property/page.tsx` and replace the placeholder `YOUR_RAZORPAY_KEY_ID` with your actual Razorpay Test Key ID.
+          </AlertDescription>
+        </Alert>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -548,6 +493,7 @@ export default function SubmitPropertyPage() {
                                 multiple
                                 accept="image/*"
                                 onChange={handleFileChange}
+                                disabled={isSubmitting}
                               />
                             </label>
                             <p className="pl-1">or drag and drop</p>
@@ -587,7 +533,8 @@ export default function SubmitPropertyPage() {
             />
 
             <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || isAiLoading}>
-              Proceed to Payment
+               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Submit & Pay with Razorpay
             </Button>
           </form>
         </Form>
