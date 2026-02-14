@@ -72,7 +72,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const YOUR_RAZORPAY_KEY_ID = 'SFdJ3T6vK0mthU'; // IMPORTANT: Replace with your Razorpay Test Key ID
-const AMOUNT = 50; // One-time fee in INR
+const AMOUNT = 49; // One-time fee in INR
 
 export default function SubmitPropertyPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
