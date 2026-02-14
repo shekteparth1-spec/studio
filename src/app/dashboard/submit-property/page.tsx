@@ -71,7 +71,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const YOUR_RAZORPAY_KEY_ID = 'rzp_test_YOUR_KEY_HERE'; // IMPORTANT: Replace with your Razorpay Test Key ID
+const YOUR_RAZORPAY_KEY_ID = 'SFdJ3T6vK0mthU'; // IMPORTANT: Replace with your Razorpay Test Key ID
 const AMOUNT = 50; // One-time fee in INR
 
 export default function SubmitPropertyPage() {
@@ -222,11 +222,11 @@ export default function SubmitPropertyPage() {
 
 
   function onFormSubmit(values: FormValues) {
-    if (YOUR_RAZORPAY_KEY_ID === 'rzp_test_YOUR_KEY_HERE') {
+    if (YOUR_RAZORPAY_KEY_ID === 'rzp_test_YOUR_KEY_HERE' || YOUR_RAZORPAY_KEY_ID === '') {
       toast({
         variant: "destructive",
         title: 'Razorpay Key Not Configured',
-        description: "Please replace the placeholder Razorpay key in the site's code to enable payments.",
+        description: "Please provide a valid Razorpay key to enable payments.",
       });
       return;
     }
@@ -285,12 +285,12 @@ export default function SubmitPropertyPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-         <Alert variant="destructive" className='mb-6'>
+         {(YOUR_RAZORPAY_KEY_ID === 'rzp_test_YOUR_KEY_HERE' || YOUR_RAZORPAY_KEY_ID === '') && <Alert variant="destructive" className='mb-6'>
           <AlertTitle>Developer Note: Setup Required</AlertTitle>
           <AlertDescription>
-            To enable payments, open `src/app/dashboard/submit-property/page.tsx` and replace the placeholder `YOUR_RAZORPAY_KEY_ID` with your actual Razorpay Test Key ID.
+            To enable payments, please provide a valid Razorpay Test Key ID in `src/app/dashboard/submit-property/page.tsx`.
           </AlertDescription>
-        </Alert>
+        </Alert>}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
