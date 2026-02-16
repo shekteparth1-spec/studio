@@ -30,11 +30,9 @@ export default function PropertiesPage() {
   useEffect(() => {
     const loadProperties = () => {
         const storedPropertiesRaw = localStorage.getItem('properties');
-        if (storedPropertiesRaw) {
-            setProperties(JSON.parse(storedPropertiesRaw));
-        } else {
-            setProperties(initialProperties);
-        }
+        const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+        const approvedProperties = allProperties.filter((p: Property) => p.status === 'approved');
+        setProperties(approvedProperties);
     };
     
     loadProperties();

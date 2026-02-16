@@ -61,7 +61,8 @@ export default function Home() {
     const loadProperties = () => {
       const storedPropertiesRaw = localStorage.getItem('properties');
       const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
-      setSourceProperties(allProperties);
+      const approvedProperties = allProperties.filter((p: Property) => p.status === 'approved');
+      setSourceProperties(approvedProperties);
     };
 
     loadProperties(); // Initial load
