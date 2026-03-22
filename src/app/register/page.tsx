@@ -68,13 +68,6 @@ export default function RegisterPage() {
         router.push('/login');
     };
     
-    const handleGoogleSignUp = () => {
-        toast({
-            title: 'Coming Soon!',
-            description: 'Sign up with Google is under development.',
-        });
-    }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
        <div className="absolute top-8 left-8">
@@ -146,9 +139,6 @@ export default function RegisterPage() {
                 </div>
                 <Button type="submit" className="w-full">
                 Create an account
-                </Button>
-                <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignUp}>
-                Sign up with Google
                 </Button>
             </div>
           </form>

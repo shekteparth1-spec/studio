@@ -53,20 +53,6 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogleLogin = () => {
-    // In a real app, you'd use Firebase Auth here.
-    // For now, we'll log in the first user as a demo.
-    const user = staticUsers[0];
-     // Don't store password in localStorage for the session
-    const { password: _, ...userToStore } = user;
-    localStorage.setItem('user', JSON.stringify(userToStore));
-    toast({
-        title: "Login Successful",
-        description: `Welcome back, ${user.name}!`,
-    });
-    router.push('/dashboard');
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
        <div className="absolute top-8 left-8">
@@ -124,9 +110,6 @@ export default function LoginPage() {
               </div>
               <Button type="submit" className="w-full">
                 Login
-              </Button>
-              <Button variant="outline" className="w-full" onClick={handleGoogleLogin} type="button">
-                Login with Google
               </Button>
             </div>
           </form>
