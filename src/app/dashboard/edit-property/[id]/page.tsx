@@ -48,6 +48,14 @@ const amenitiesList = [
   { id: 'gym', label: 'Gym' },
   { id: 'spa', label: 'Spa' },
   { id: 'restaurant', label: 'Restaurant' },
+  { id: 'ac', label: 'Air Conditioning' },
+  { id: 'tv', label: 'TV' },
+  { id: 'washer', label: 'Washer' },
+  { id: 'balcony', label: 'Balcony' },
+  { id: 'garden', label: 'Garden' },
+  { id: 'bbq', label: 'BBQ Grill' },
+  { id: 'pets', label: 'Pet Friendly' },
+  { id: 'workspace', label: 'Dedicated Workspace' },
 ];
 
 const formSchema = z.object({
@@ -405,7 +413,7 @@ export default function EditPropertyPage() {
                     <div className="mb-4">
                       <FormLabel className="text-base">Amenities</FormLabel>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {amenitiesList.map((item) => (
                       <FormField
                         key={item.id}

@@ -18,6 +18,13 @@ import {
   Waves,
   Map,
   Phone,
+  Tv,
+  WashingMachine,
+  Sunset,
+  TreePine,
+  Flame,
+  PawPrint,
+  Laptop,
 } from 'lucide-react';
 import { properties as initialProperties, users, type Property } from '@/lib/data';
 import Header from '@/components/header';
@@ -45,6 +52,14 @@ const amenityIcons: { [key: string]: React.ReactNode } = {
   gym: <Dumbbell size={20} />,
   spa: <Sprout size={20} />,
   restaurant: <Utensils size={20} />,
+  ac: <Wind size={20} />,
+  tv: <Tv size={20} />,
+  washer: <WashingMachine size={20} />,
+  balcony: <Sunset size={20} />,
+  garden: <TreePine size={20} />,
+  bbq: <Flame size={20} />,
+  pets: <PawPrint size={20} />,
+  workspace: <Laptop size={20} />,
 };
 
 export default function PropertyDetailsPage() {
