@@ -17,7 +17,7 @@ export default function Footer() {
             <ul className="mt-4 space-y-2">
               <li>
                 <Link href="/properties" className="text-sm text-muted-foreground hover:text-primary">
-                  Properties
+                  Explore All Stays
                 </Link>
               </li>
               <li>
@@ -27,7 +27,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/dashboard/submit-property" className="text-sm text-muted-foreground hover:text-primary">
-                  List your Property
+                  List your Stay
                 </Link>
               </li>
             </ul>

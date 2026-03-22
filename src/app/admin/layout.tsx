@@ -40,9 +40,9 @@ export default function AdminLayout({
   };
 
   const getPageTitle = () => {
-    if (pathname === '/admin/properties') return 'Properties';
+    if (pathname === '/admin/properties') return 'Explore All Stays';
     if (pathname === '/admin/users') return 'Users';
-    if (pathname === '/admin/dashboard') return 'Property Submissions';
+    if (pathname === '/admin/dashboard') return 'Stay Submissions';
     return 'Admin Dashboard';
   };
 
@@ -64,10 +64,10 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Properties" isActive={pathname === '/admin/properties'}>
+                <SidebarMenuButton asChild tooltip="Explore All Stays" isActive={pathname === '/admin/properties'}>
                    <Link href="/admin/properties">
                     <Building />
-                    <span>Properties</span>
+                    <span>Explore All Stays</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

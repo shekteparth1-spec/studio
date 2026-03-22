@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/properties', label: 'Properties' },
+  { href: '/properties', label: 'Explore All Stays' },
 ];
 
 export default function Header() {
@@ -124,7 +124,7 @@ export default function Header() {
                 </>
               )}
                <Button variant="outline" asChild>
-                <Link href={isAuthenticated ? "/dashboard/submit-property" : "/login"}>List your property</Link>
+                <Link href={isAuthenticated ? "/dashboard/submit-property" : "/login"}>List your stay</Link>
               </Button>
             </>
           )}

@@ -64,8 +64,8 @@ export default function AdminPropertiesPage() {
     window.dispatchEvent(new Event('storage'));
     
     toast({
-        title: 'Property Deleted',
-        description: 'The property has been successfully removed.',
+        title: 'Stay Deleted',
+        description: 'The stay has been successfully removed.',
     });
     setPropertyToDelete(null);
   };
@@ -74,9 +74,9 @@ export default function AdminPropertiesPage() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">All Properties</CardTitle>
+          <CardTitle className="font-headline">All Stays</CardTitle>
           <CardDescription>
-            Manage all property listings on the platform.
+            Manage all stay listings on the platform.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -139,7 +139,7 @@ export default function AdminPropertiesPage() {
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete this
-                  property from the platform.
+                  stay from the platform.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
