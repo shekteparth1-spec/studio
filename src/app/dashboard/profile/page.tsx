@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -5,55 +6,75 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { type User } from "@/lib/data";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { Loader2 } from 'lucide-react';
 
 export default function ProfilePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [name, setName] = useState('');
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid);
+  }, [db, user]);
+
+  const { data: profile, isLoading: isProfileLoading } = useDoc(userDocRef);
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      setName(parsedUser.name || '');
-      setPhone(parsedUser.phone || '');
-    } else {
-      router.push('/login');
+    if (profile) {
+      setFirstName(profile.firstName || '');
+      setLastName(profile.lastName || '');
+      setPhone(profile.phoneNumber || '');
     }
-  }, [router]);
+  }, [profile]);
 
-  if (!user) {
-    return <div className="flex items-center justify-center h-full">Loading profile...</div>;
+  if (isUserLoading || isProfileLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  const handleUpdate = (e: React.FormEvent) => {
+  if (!user) return null;
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Update current session
-    const updatedUser = { ...user, name, phone };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    setUser(updatedUser);
+    if (!db || !user) return;
 
-    // Update registered users list
-    const registeredUsers: User[] = JSON.parse(localStorage.getItem('registered_users') || '[]');
-    const userIndex = registeredUsers.findIndex(u => u.id === user.id);
-    if (userIndex !== -1) {
-      registeredUsers[userIndex] = { ...registeredUsers[userIndex], name, phone };
-      localStorage.setItem('registered_users', JSON.stringify(registeredUsers));
-    }
+    setIsUpdating(true);
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, {
+        firstName,
+        lastName,
+        phoneNumber: phone,
+      });
 
-    window.dispatchEvent(new Event('storage'));
-
-    toast({
+      toast({
         title: "Profile Updated",
         description: "Your profile information has been successfully updated.",
-    });
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "There was an error updating your profile. Please try again.",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   }
 
   return (
@@ -64,23 +85,35 @@ export default function ProfilePage() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col gap-1 pb-4 border-b">
-          <h2 className="text-3xl font-bold">{user.name}</h2>
+          <h2 className="text-3xl font-bold">{firstName} {lastName}</h2>
           <p className="text-muted-foreground">{user.email}</p>
-          <Badge variant="outline" className="w-fit mt-2 capitalize">{user.role}</Badge>
+          <Badge variant="outline" className="w-fit mt-2 capitalize">{profile?.role || 'User'}</Badge>
         </div>
         
         <form className="space-y-4 max-w-lg" onSubmit={handleUpdate}>
-            <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input 
+                      id="firstName" 
+                      value={firstName} 
+                      onChange={(e) => setFirstName(e.target.value)} 
+                      disabled={isUpdating}
+                    />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input 
+                      id="lastName" 
+                      value={lastName} 
+                      onChange={(e) => setLastName(e.target.value)} 
+                      disabled={isUpdating}
+                    />
+                </div>
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" value={user.email} readOnly className="bg-muted text-muted-foreground" />
+                <Input id="email" type="email" value={user.email || ''} readOnly className="bg-muted text-muted-foreground" />
                 <p className="text-[10px] text-muted-foreground">Email cannot be changed.</p>
             </div>
              <div className="grid gap-2">
@@ -91,19 +124,15 @@ export default function ProfilePage() {
                   value={phone} 
                   onChange={(e) => setPhone(e.target.value)} 
                   placeholder="+91 9876543210"
+                  disabled={isUpdating}
                 />
             </div>
-             <Button type="submit" className="w-full sm:w-auto rounded-full px-8">Update Profile</Button>
+             <Button type="submit" className="w-full sm:w-auto rounded-full px-8" disabled={isUpdating}>
+                {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Update Profile
+             </Button>
         </form>
       </CardContent>
     </Card>
   );
-}
-
-function Badge({ children, variant, className }: { children: React.ReactNode, variant?: any, className?: string }) {
-  return (
-    <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors ${variant === 'outline' ? 'text-foreground' : 'bg-primary text-primary-foreground'} ${className}`}>
-      {children}
-    </div>
-  )
 }

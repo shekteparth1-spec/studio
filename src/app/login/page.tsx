@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link"
@@ -43,10 +44,20 @@ export default function LoginPage() {
       router.push('/dashboard')
     } catch (error: any) {
       console.error("Login error:", error)
+      let errorMessage = "Invalid email or password."
+      
+      if (error.code === 'auth/invalid-credential') {
+        errorMessage = "We couldn't find an account with those credentials. Please check your email and password or sign up for a new account."
+      } else if (error.code === 'auth/user-not-found') {
+        errorMessage = "No account exists with this email address."
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = "Incorrect password. Please try again."
+      }
+
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message || "Invalid email or password.",
+        description: errorMessage,
       })
     } finally {
       setIsLoading(false)
@@ -58,7 +69,7 @@ export default function LoginPage() {
        <div className="absolute top-8 left-8">
         <Logo />
       </div>
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-sm shadow-lg border-none">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Login</CardTitle>
           <CardDescription>
@@ -85,7 +96,7 @@ export default function LoginPage() {
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="#"
-                    className="ml-auto inline-block text-sm underline"
+                    className="ml-auto inline-block text-sm underline hover:text-primary transition-colors"
                   >
                     Forgot your password?
                   </Link>
@@ -103,14 +114,14 @@ export default function LoginPage() {
                    <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full rounded-full" disabled={isLoading}>
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Login
               </Button>
@@ -118,7 +129,7 @@ export default function LoginPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="underline">
+            <Link href="/register" className="underline font-semibold hover:text-primary transition-colors">
               Sign up
             </Link>
           </div>

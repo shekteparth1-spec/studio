@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -37,7 +38,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
-import { properties as initialProperties, type Property, type User } from '@/lib/data';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -77,14 +79,8 @@ export default function SubmitPropertyPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+  const { user } = useUser();
+  const db = useFirestore();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -162,39 +158,60 @@ export default function SubmitPropertyPage() {
   };
 
   async function onFormSubmit(values: FormValues) {
-    if (!user) {
+    if (!user || !db) {
       toast({
           variant: "destructive",
           title: 'Error',
-          description: 'User data is missing. Please log in and try again.',
+          description: 'You must be logged in to submit a property.',
       });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const newProperty: Property = {
-        id: `prop-${Date.now()}`,
-        name: values.name,
+      // Create properties in the user's subcollection
+      const userPropertiesRef = collection(db, 'users', user.uid, 'properties');
+      const docRef = await addDoc(userPropertiesRef, {
+        ownerId: user.uid,
+        title: values.name,
         type: values.type,
         location: values.location,
+        city: values.location.split(',')[0].trim(),
+        stateProvince: values.location.split(',')[1]?.trim() || '',
         pricePerNight: values.pricePerNight,
-        bedrooms: values.bedrooms,
-        squareFeet: values.squareFeet,
-        rating: 0,
+        numberOfBedrooms: values.bedrooms,
+        squareFootage: values.squareFeet,
         description: values.description,
-        amenities: values.amenities,
-        imageUrls: values.photos,
-        imageHints: [],
-        ownerId: user.id,
-        status: 'approved',
-      };
+        amenityIds: values.amenities,
+        photoUrls: values.photos,
+        listingStatus: 'Approved',
+        submissionDate: new Date().toISOString(),
+        aiScore: 85, // Mock AI score
+        addressLine1: values.location,
+        country: 'India',
+        latitude: 0,
+        longitude: 0,
+        numberOfBathrooms: 1,
+        maxGuests: 4,
+      });
 
-      const storedPropertiesRaw = localStorage.getItem('properties');
-      const currentProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
-      currentProperties.unshift(newProperty);
-      localStorage.setItem('properties', JSON.stringify(currentProperties));
-      window.dispatchEvent(new Event('storage'));
+      // Also copy to public_properties for visibility
+      await setDoc(doc(db, 'public_properties', docRef.id), {
+        id: docRef.id,
+        ownerId: user.uid,
+        title: values.name,
+        type: values.type,
+        location: values.location,
+        city: values.location.split(',')[0].trim(),
+        pricePerNight: values.pricePerNight,
+        numberOfBedrooms: values.bedrooms,
+        squareFootage: values.squareFeet,
+        description: values.description,
+        amenityIds: values.amenities,
+        photoUrls: values.photos,
+        listingStatus: 'Approved',
+        submissionDate: new Date().toISOString(),
+      });
 
       toast({
         title: 'Property Submitted!',
@@ -216,9 +233,9 @@ export default function SubmitPropertyPage() {
   }
   
   return (
-    <Card>
+    <Card className="border-none shadow-md">
       <CardHeader>
-        <CardTitle className="font-headline">Submit a Property</CardTitle>
+        <CardTitle className="font-headline text-2xl">Submit a Property</CardTitle>
         <CardDescription>
           Fill out the details below to list your property on Harvest Haven.
         </CardDescription>
@@ -248,7 +265,7 @@ export default function SubmitPropertyPage() {
                     <FormLabel>Property Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="rounded-md">
                           <SelectValue placeholder="Select a property type" />
                         </SelectTrigger>
                       </FormControl>
@@ -332,6 +349,7 @@ export default function SubmitPropertyPage() {
                       size="sm"
                       onClick={handleGenerateDescription}
                       disabled={isAiLoading || isSubmitting}
+                      className="text-primary hover:text-primary/80"
                     >
                       {isAiLoading ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -359,7 +377,7 @@ export default function SubmitPropertyPage() {
               render={() => (
                 <FormItem>
                   <div className="mb-4">
-                    <FormLabel className="text-base">Amenities</FormLabel>
+                    <FormLabel className="text-base font-bold">Amenities</FormLabel>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {amenitiesList.map((item) => (
@@ -387,7 +405,7 @@ export default function SubmitPropertyPage() {
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className="font-normal">
+                            <FormLabel className="font-normal cursor-pointer">
                               {item.label}
                             </FormLabel>
                           </FormItem>
@@ -406,10 +424,10 @@ export default function SubmitPropertyPage() {
               name="photos"
               render={() => (
                 <FormItem>
-                  <FormLabel>Photos</FormLabel>
+                  <FormLabel className="font-bold">Photos</FormLabel>
                   <FormControl>
                     <div>
-                      <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10">
+                      <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10 hover:bg-muted/30 transition-colors">
                         <div className="text-center">
                           <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                           <div className="mt-4 flex text-sm leading-6 text-muted-foreground">
@@ -431,7 +449,7 @@ export default function SubmitPropertyPage() {
                             </label>
                             <p className="pl-1">or drag and drop</p>
                           </div>
-                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG, GIF up to 10MB</p>
+                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 10MB</p>
                         </div>
                       </div>
                       {imagePreviews.length > 0 && (
@@ -465,7 +483,7 @@ export default function SubmitPropertyPage() {
               )}
             />
 
-            <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || isAiLoading}>
+            <Button type="submit" size="lg" className="w-full sm:w-auto rounded-full" disabled={isSubmitting || isAiLoading}>
                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Submit Property
             </Button>
