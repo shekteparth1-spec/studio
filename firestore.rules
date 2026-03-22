@@ -1,0 +1,120 @@
+/**
+ * Harvest Haven Security Rules
+ *
+ * Core Philosophy:
+ * This ruleset implements a strict authorization model based on identity and roles, prioritizing
+ * path-based ownership and a dedicated admin sentinel collection. It follows the principle of 
+ * Authorization Independence by requiring relational data (like ownerId) to be denormalized 
+ * directly onto documents, avoiding expensive cross-document lookups.
+ *
+ * Data Structure:
+ * - /users/{userId}: Private user profiles, owned by the authenticated user.
+ * - /roles_admin/{adminId}: A sentinel collection used to verify administrative privileges.
+ * - /amenities/{amenityId}: Publicly readable metadata for property features.
+ * - /users/{userId}/properties/{propertyId}: Private property management area for owners and admins.
+ * - /public_properties/{propertyId}: A public catalog of approved listings for searching and viewing.
+ *
+ * Key Security Decisions:
+ * - Structural Segregation: Properties are split between user-specific subcollections (for drafts/review)
+ *   and a top-level public collection (for approved listings) to simplify Query-as-Permissions (QAP).
+ * - Admin Access: Administrators are granted broad read access to facilitate the property review 
+ *   process but are restricted to specific collections for management.
+ * - Path-to-Data Consistency: Rules enforce that the ownerId in the document matches the userId 
+ *   in the path to maintain relational integrity.
+ * - Prototyping Flexibility: Data types and specific field shapes are not enforced, allowing for 
+ *   rapid schema iteration while maintaining strict access control.
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Global Helper Functions ---
+
+    /** @description Checks if the request is from a signed-in user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the signed-in user matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Verifies the user has an entry in the admin sentinel collection. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /** @description Checks ownership and ensures the document exists for modifications. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for user profiles. Users manage their own; admins can read for support.
+     * @path /users/{userId}
+     * @allow (get) If the user is the owner or an administrator.
+     * @deny (create) If the userId in the path does not match the authenticated UID.
+     * @principle Path-based ownership and self-creation validation.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if false; // Profiles are preserved for historical integrity.
+    }
+
+    /**
+     * @description Sentinel collection to identify administrators.
+     * @path /roles_admin/{adminId}
+     * @allow (get) If the requesting user is an administrator.
+     * @deny (write) Any direct client-side write to the admin role collection.
+     * @principle Secure, lookup-based role assignment.
+     */
+    match /roles_admin/{adminId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if false; // Managed via privileged backend environment.
+    }
+
+    /**
+     * @description Globally accessible list of property amenities.
+     * @path /amenities/{amenityId}
+     * @allow (get, list) For all users, including anonymous.
+     * @deny (write) For any user who is not an administrator.
+     * @principle Homogeneous public read access with restricted admin writes.
+     */
+    match /amenities/{amenityId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Owner-specific property listings (Drafts, Pending, Rejected).
+     * @path /users/{userId}/properties/{propertyId}
+     * @allow (create) If the authenticated owner is creating a document for their own path.
+     * @deny (update) If a non-admin user attempts to change the ownerId.
+     * @principle Denormalization for authorization and relational integrity enforcement.
+     */
+    match /users/{userId}/properties/{propertyId} {
+      allow get, list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.ownerId == userId;
+      allow update: if (isExistingOwner(userId) || isAdmin()) && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if isExistingOwner(userId) || isAdmin();
+    }
+
+    /**
+     * @description Publicly visible catalog of approved property listings.
+     * @path /public_properties/{propertyId}
+     * @allow (get, list) For all users (Public Catalog).
+     * @deny (write) If the user is not an administrator.
+     * @principle Query-as-Permissions (QAP) through structural segregation.
+     */
+    match /public_properties/{propertyId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

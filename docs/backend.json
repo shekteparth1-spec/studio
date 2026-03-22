@@ -1,0 +1,309 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user of the Harvest Haven platform, including property owners and administrators. Contains profile information and application-specific roles.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for contact and as a unique identifier for the user's account.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The user's contact phone number."
+        },
+        "registrationDate": {
+          "type": "string",
+          "description": "The date and time when the user registered on the platform.",
+          "format": "date-time"
+        },
+        "role": {
+          "type": "string",
+          "description": "The application-specific role of the user (e.g., 'Owner', 'Admin')."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "registrationDate",
+        "role"
+      ]
+    },
+    "Amenity": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Amenity",
+      "type": "object",
+      "description": "Represents a specific amenity or feature that a property can offer (e.g., Wi-Fi, Swimming Pool, Pet Friendly).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Amenity entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the amenity (e.g., 'Swimming Pool', 'Wi-Fi')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description explaining what the amenity is."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+    "Property": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Property",
+      "type": "object",
+      "description": "Represents a farmhouse or resort property listed on the Harvest Haven website, including all details for display and administration.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Property entity."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Reference to the UserProfile of the owner who submitted this property listing. (Relationship: UserProfile 1:N Property)"
+        },
+        "title": {
+          "type": "string",
+          "description": "A concise and engaging title for the property listing."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the property, including its features and unique selling points."
+        },
+        "addressLine1": {
+          "type": "string",
+          "description": "The first line of the property's physical address."
+        },
+        "addressLine2": {
+          "type": "string",
+          "description": "The second line of the property's physical address (optional)."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city where the property is located."
+        },
+        "stateProvince": {
+          "type": "string",
+          "description": "The state or province where the property is located."
+        },
+        "zipPostalCode": {
+          "type": "string",
+          "description": "The zip or postal code of the property's location."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country where the property is located."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "The geographical latitude coordinate of the property's location."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "The geographical longitude coordinate of the property's location."
+        },
+        "squareFootage": {
+          "type": "number",
+          "description": "The total square footage or area of the property."
+        },
+        "pricePerNight": {
+          "type": "number",
+          "description": "The price to book the property for one night."
+        },
+        "numberOfBedrooms": {
+          "type": "number",
+          "description": "The number of bedrooms available in the property."
+        },
+        "numberOfBathrooms": {
+          "type": "number",
+          "description": "The number of bathrooms available in the property."
+        },
+        "maxGuests": {
+          "type": "number",
+          "description": "The maximum number of guests the property can accommodate."
+        },
+        "amenityIds": {
+          "type": "array",
+          "description": "References to Amenities available at the property. (Relationship: Amenity N:N Property)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "photoUrls": {
+          "type": "array",
+          "description": "An array of URLs pointing to images of the property for display.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "listingStatus": {
+          "type": "string",
+          "description": "The current status of the property listing (e.g., 'Draft', 'Pending Approval', 'Approved', 'Rejected', 'Archived')."
+        },
+        "submissionDate": {
+          "type": "string",
+          "description": "The date and time when the property was submitted for listing by the owner.",
+          "format": "date-time"
+        },
+        "approvedByAdminId": {
+          "type": "string",
+          "description": "Reference to the UserProfile of the admin who approved the listing. Null if not yet approved. (Relationship: UserProfile 1:N Property for approvals)"
+        },
+        "approvalDate": {
+          "type": "string",
+          "description": "The date and time when the property listing was approved. Null if not yet approved or rejected.",
+          "format": "date-time"
+        },
+        "rejectionReason": {
+          "type": "string",
+          "description": "The reason provided by the admin if the property listing was rejected. Null if approved or pending."
+        },
+        "aiScore": {
+          "type": "number",
+          "description": "A numerical score (0-100) indicating the AI-powered tool's recommendation for listing visibility and suitability based on its data analysis."
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "title",
+        "description",
+        "addressLine1",
+        "city",
+        "stateProvince",
+        "zipPostalCode",
+        "country",
+        "latitude",
+        "longitude",
+        "squareFootage",
+        "pricePerNight",
+        "numberOfBedrooms",
+        "numberOfBathrooms",
+        "maxGuests",
+        "amenityIds",
+        "photoUrls",
+        "listingStatus",
+        "submissionDate",
+        "aiScore"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores individual user profiles. Users can read/write their own profile, while administrators may have broader read access. This path-based ownership simplifies security rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "A sentinel collection to identify administrators. Documents exist where 'adminId' is the UID of an admin user. Used for efficient, authorization-independent role checks (DBAC principle).",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier of an administrator, corresponding to Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/amenities/{amenityId}",
+        "definition": {
+          "entityName": "Amenity",
+          "schema": {
+            "$ref": "#/backend/entities/Amenity"
+          },
+          "description": "Stores a globally accessible list of all available amenities. These are typically static and publicly readable, with write access restricted to administrators.",
+          "params": [
+            {
+              "name": "amenityId",
+              "description": "The unique identifier for an amenity."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/properties/{propertyId}",
+        "definition": {
+          "entityName": "Property",
+          "schema": {
+            "$ref": "#/backend/entities/Property"
+          },
+          "description": "Stores properties submitted by a specific owner, including properties in 'DRAFT', 'PENDING_APPROVAL', or 'REJECTED' states. Owners can manage their own properties here. Administrators have read access to all properties for review and can update status/approval fields. Includes denormalized 'ownerId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the property owner, corresponding to Firebase Authentication UID."
+            },
+            {
+              "name": "propertyId",
+              "description": "The unique identifier for the specific property listing."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/public_properties/{propertyId}",
+        "definition": {
+          "entityName": "Property",
+          "schema": {
+            "$ref": "#/backend/entities/Property"
+          },
+          "description": "Stores only 'APPROVED' property listings that are publicly visible and searchable by all users. This collection supports QAPs for public read access. Only administrators can create/update/delete documents in this collection. Includes denormalized 'ownerId'.",
+          "params": [
+            {
+              "name": "propertyId",
+              "description": "The unique identifier for the specific property listing."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The proposed Firestore structure for Harvest Haven prioritizes security, scalability, and debuggability by adhering to the core design principles. The primary strategy revolves around **Authorization Independence via Denormalization** and **Structural Segregation** to simplify security rules and ensure Query-As-Permissions (QAP) compliance.\n\n**User Profiles (`/users/{userId}`):** User profiles are stored in a top-level collection, with the document ID (`userId`) matching the `request.auth.uid`. This provides clear path-based ownership, making authorization for user-specific data straightforward and efficient.\n\n**Admin Roles (`/roles_admin/{adminId}`):** To achieve Authorization Independence for role-based access, a dedicated top-level collection `/roles_admin` is used. An admin's UID will exist as a document ID in this collection. Security rules can then use `exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))` to check for admin privileges without relying on `get()` operations on a `UserProfile` document, thus avoiding hierarchical dependencies and breaking atomicity.\n\n**Amenities (`/amenities/{amenityId}`):** Amenities are stored in a global, top-level collection. These are typically public and read-only for general users, with write access restricted to administrators, demonstrating homogeneous security posture.\n\n**Property Listings (Dual Collection Strategy for QAPs and Segregation):** This is the most critical part for ensuring Authorization Independence and QAPs. Properties are segregated into two distinct collections based on their security posture and lifecycle stage:\n\n1.  **`/users/{userId}/properties/{propertyId}`:** This subcollection stores properties submitted by a specific owner. It holds properties in various non-public states such as `DRAFT`, `PENDING_APPROVAL`, `REJECTED`. This path directly links properties to their owners. Each `Property` document within this subcollection **denormalizes the `ownerId`**. This is crucial for **Authorization Independence**; rules can verify `request.auth.uid == userId` (from the path) and `request.resource.data.ownerId == userId` without needing to perform a `get()` on the parent `UserProfile` document. This also ensures atomic operations for property creation/updates by the owner. Administrators will have read access to all documents across all `userId` subcollections here to facilitate the review process.\n\n2.  **`/public_properties/{propertyId}`:** This top-level collection is designed to hold only `APPROVED` property listings. It serves as the public catalog for all users, supporting global search and filter functionalities. Documents in this collection are publicly readable, directly enabling **QAPs**. A `list` operation on `/public_properties` will naturally return only approved properties without requiring complex filtering logic in security rules. Only administrators can create, update, or delete documents in this collection, typically by copying approved properties from the user-specific subcollections. The `ownerId` is also denormalized here, allowing for potential future features like displaying owner information without additional `get()` calls.\n\nThis dual-collection approach for properties effectively isolates security concerns: private, owner-managed properties are separate from public, approved properties. This allows for simple, robust security rules for each collection, fulfilling the QAPs by preventing rules from acting as filters and making authorization intent explicit."
+  }
+}
