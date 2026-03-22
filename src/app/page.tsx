@@ -44,6 +44,18 @@ export default function Home() {
         </section>
         
         <HomeClient />
+
+        <section className="py-20 bg-primary/5">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="font-headline text-3xl font-bold mb-4">Are you a Property Owner?</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto mb-8 text-lg">
+              List your farmhouse or resort on Harvest Haven and reach thousands of nature lovers looking for their next escape.
+            </p>
+            <Button asChild size="lg" variant="default" className="rounded-full px-10">
+              <Link href="/dashboard/submit-property">Submit Your Property</Link>
+            </Button>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>
