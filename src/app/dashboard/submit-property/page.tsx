@@ -282,7 +282,7 @@ export default function SubmitPropertyPage() {
       <CardHeader>
         <CardTitle className="font-headline">Submit a Property</CardTitle>
         <CardDescription>
-          Fill out the details below to list your property on Harvest Haven. A one-time fee of ₹{AMOUNT} is required.
+          Fill out the details below to list your property on Harvest Haven. A one-time fee of INR {AMOUNT} is required.
         </CardDescription>
       </CardHeader>
       <CardContent>
