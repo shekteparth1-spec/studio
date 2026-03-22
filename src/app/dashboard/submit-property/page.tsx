@@ -37,15 +37,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { properties as initialProperties, type Property, type User } from '@/lib/data';
-
-// Add this for Razorpay window object
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -71,9 +63,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const YOUR_RAZORPAY_KEY_ID = 'SFdJ3T6vK0mthU'; // IMPORTANT: Replace with your Razorpay Test Key ID
-const AMOUNT = 49; // One-time fee in INR
-
 export default function SubmitPropertyPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,7 +76,6 @@ export default function SubmitPropertyPage() {
     if (userData) {
       setUser(JSON.parse(userData));
     }
-    // The dashboard layout handles redirection if the user is not logged in.
   }, []);
 
   const form = useForm<FormValues>({
@@ -165,8 +153,7 @@ export default function SubmitPropertyPage() {
     setImagePreviews(updatedPhotos);
   };
 
-
-  async function handleFinalSubmit(values: FormValues, paymentId: string) {
+  async function onFormSubmit(values: FormValues) {
     if (!user) {
       toast({
           variant: "destructive",
@@ -178,7 +165,6 @@ export default function SubmitPropertyPage() {
 
     setIsSubmitting(true);
     try {
-      // In a real app, you would verify the payment on your backend.
       const newProperty: Property = {
         id: `prop-${Date.now()}`,
         name: values.name,
@@ -191,9 +177,9 @@ export default function SubmitPropertyPage() {
         description: values.description,
         amenities: values.amenities,
         imageUrls: values.photos,
-        imageHints: [], // User-uploaded photos don't have hints
+        imageHints: [],
         ownerId: user.id,
-        status: 'pending',
+        status: 'approved',
       };
 
       const storedPropertiesRaw = localStorage.getItem('properties');
@@ -203,8 +189,8 @@ export default function SubmitPropertyPage() {
       window.dispatchEvent(new Event('storage'));
 
       toast({
-        title: 'Payment Successful!',
-        description: `Your property has been submitted for review. Payment ID: ${paymentId}`,
+        title: 'Property Submitted!',
+        description: `Your property is now live and visible to everyone.`,
       });
       
       router.push('/dashboard');
@@ -220,78 +206,16 @@ export default function SubmitPropertyPage() {
       setIsSubmitting(false);
     }
   }
-
-
-  function onFormSubmit(values: FormValues) {
-    if (YOUR_RAZORPAY_KEY_ID === 'rzp_test_YOUR_KEY_HERE' || YOUR_RAZORPAY_KEY_ID === '') {
-      toast({
-        variant: "destructive",
-        title: 'Razorpay Key Not Configured',
-        description: "Please provide a valid Razorpay key to enable payments.",
-      });
-      return;
-    }
-    
-    if (!window.Razorpay) {
-      toast({
-        variant: "destructive",
-        title: "Razorpay Not Loaded",
-        description: "Please check your internet connection or try refreshing the page.",
-      });
-      return;
-    }
-
-    const options = {
-      key: YOUR_RAZORPAY_KEY_ID,
-      amount: AMOUNT * 100, // Razorpay expects amount in the smallest currency unit (paise)
-      currency: "INR",
-      name: "Harvest Haven",
-      description: "Property Listing Fee",
-      image: "https://cdn.iconscout.com/icon/premium/png-256-thumb/leaf-7527637-6138942.png",
-      handler: async (response: any) => {
-        await handleFinalSubmit(values, response.razorpay_payment_id);
-      },
-      prefill: {
-        name: user?.name,
-        email: user?.email,
-      },
-      notes: {
-        property_name: values.name,
-      },
-      theme: {
-        color: "#9A7B4F"
-      }
-    };
-    const rzp = new window.Razorpay(options);
-    
-    rzp.on('payment.failed', function (response: any){
-        toast({
-            variant: "destructive",
-            title: 'Payment Failed',
-            description: response.error.description,
-        });
-        setIsSubmitting(false);
-    });
-
-    setIsSubmitting(true);
-    rzp.open();
-  }
   
   return (
     <Card>
       <CardHeader>
         <CardTitle className="font-headline">Submit a Property</CardTitle>
         <CardDescription>
-          Fill out the details below to list your property on Harvest Haven. A one-time fee of INR {AMOUNT} is required.
+          Fill out the details below to list your property on Harvest Haven.
         </CardDescription>
       </CardHeader>
       <CardContent>
-         {(YOUR_RAZORPAY_KEY_ID === 'rzp_test_YOUR_KEY_HERE' || YOUR_RAZORPAY_KEY_ID === '') && <Alert variant="destructive" className='mb-6'>
-          <AlertTitle>Developer Note: Setup Required</AlertTitle>
-          <AlertDescription>
-            To enable payments, please provide a valid Razorpay Test Key ID in `src/app/dashboard/submit-property/page.tsx`.
-          </AlertDescription>
-        </Alert>}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -535,7 +459,7 @@ export default function SubmitPropertyPage() {
 
             <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || isAiLoading}>
                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Submit & Pay with Razorpay
+              Submit Property
             </Button>
           </form>
         </Form>

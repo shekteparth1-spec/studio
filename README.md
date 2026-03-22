@@ -23,5 +23,4 @@ git config pull.rebase false
 
 - **Unique Stays**: Handpicked farmhouses and luxury resorts.
 - **AI-Powered Listings**: Descriptions generated using Genkit AI.
-- **Secure Payments**: Razorpay integration for property listings.
 - **Modern UI**: Nature-inspired design with ShadCN components.
