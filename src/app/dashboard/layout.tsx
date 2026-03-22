@@ -21,7 +21,9 @@ import { Logo } from '@/components/logo';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function DashboardLayout({
   children,
@@ -31,23 +33,26 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
-  const [isClient, setIsClient] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
 
   useEffect(() => {
-    setIsClient(true);
-    const user = localStorage.getItem('user');
-    if (!user) {
+    if (!isUserLoading && !user) {
       router.replace('/login');
     }
-  }, [router]);
+  }, [user, isUserLoading, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+      router.push('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const getPageTitle = () => {
@@ -56,8 +61,12 @@ export default function DashboardLayout({
     return 'User Dashboard';
   };
   
-  if (!isClient) {
-    return null; // Or a loading spinner
+  if (isUserLoading) {
+    return <div className="flex min-h-screen items-center justify-center">Loading dashboard...</div>;
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (

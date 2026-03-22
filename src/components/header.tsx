@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { Menu } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import {
 import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser, useAuth } from '@/firebase';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -21,39 +23,22 @@ const navLinks = [
 ];
 
 export default function Header() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const user = localStorage.getItem('user');
-    setIsAuthenticated(!!user);
-    setIsClient(true);
-
-    const handleStorageChange = () => {
-      const user = localStorage.getItem('user');
-      setIsAuthenticated(!!user);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleStorageChange);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-    router.push('/');
-    window.dispatchEvent(new Event('storage'));
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+      router.push('/');
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   }
 
   return (
@@ -98,15 +83,14 @@ export default function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-4">
-          {!isClient ? (
+          {isUserLoading ? (
             <>
               <Skeleton className="h-10 w-24" />
               <Skeleton className="h-10 w-24" />
-              <Skeleton className="h-10 w-36" />
             </>
           ) : (
             <>
-              {isAuthenticated ? (
+              {user ? (
                 <>
                   <Button variant="ghost" asChild>
                     <Link href='/dashboard'>Dashboard</Link>
@@ -124,7 +108,7 @@ export default function Header() {
                 </>
               )}
                <Button variant="outline" asChild>
-                <Link href={isAuthenticated ? "/dashboard/submit-property" : "/login"}>List your stay</Link>
+                <Link href={user ? "/dashboard/submit-property" : "/login"}>List your stay</Link>
               </Button>
             </>
           )}

@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React, { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { signInWithEmailAndPassword } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,40 +17,39 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
-import { users as staticUsers, type User } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/firebase"
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const auth = useAuth()
+  
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
 
-    const registeredUsers: User[] = JSON.parse(localStorage.getItem('registered_users') || '[]');
-    const allUsers = [...staticUsers, ...registeredUsers];
-    
-    const user = allUsers.find(u => u.email === email && u.password === password)
-
-    if (user) {
-      // Don't store password in localStorage for the session
-      const { password: _, ...userToStore } = user;
-      localStorage.setItem('user', JSON.stringify(userToStore));
-      
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${user.name}!`,
+        description: "Welcome back to Harvest Haven!",
       })
       router.push('/dashboard')
-    } else {
+    } catch (error: any) {
+      console.error("Login error:", error)
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid email or password.",
+        description: error.message || "Invalid email or password.",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -77,6 +77,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
               <div className="grid gap-2">
@@ -97,6 +98,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pr-10"
+                    disabled={isLoading}
                   />
                    <button
                     type="button"
@@ -108,7 +110,8 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Login
               </Button>
             </div>

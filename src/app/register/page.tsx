@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React, { useState } from "react"
+import { createUserWithEmailAndPassword } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,19 +18,23 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast"
-import { type User } from "@/lib/data"
+import { useAuth, useFirestore } from "@/firebase"
+import { Loader2 } from "lucide-react"
 
 export default function RegisterPage() {
     const router = useRouter();
     const { toast } = useToast();
+    const auth = useAuth();
+    const db = useFirestore();
+    
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!firstName || !lastName || !email || !password || !phone) {
             toast({
@@ -39,33 +45,37 @@ export default function RegisterPage() {
             return;
         }
 
-        const existingUsers: User[] = JSON.parse(localStorage.getItem('registered_users') || '[]');
-        if (existingUsers.some(u => u.email === email)) {
-             toast({
+        setIsLoading(true);
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Create user profile in Firestore
+            await setDoc(doc(db, 'users', user.uid), {
+                id: user.uid,
+                firstName,
+                lastName,
+                email,
+                phoneNumber: phone,
+                registrationDate: new Date().toISOString(),
+                role: 'Owner' // Default role for new signups
+            });
+
+            toast({
+                title: "Account Created",
+                description: "Welcome to Harvest Haven! Redirecting to dashboard...",
+            });
+            router.push('/dashboard');
+        } catch (error: any) {
+            console.error("Registration error:", error);
+            toast({
                 variant: "destructive",
                 title: "Registration Failed",
-                description: "An account with this email already exists.",
+                description: error.message || "An error occurred during registration.",
             });
-            return;
+        } finally {
+            setIsLoading(false);
         }
-        
-        const newUser: User = {
-            id: `user-${Date.now()}`,
-            name: `${firstName} ${lastName}`,
-            email,
-            phone,
-            password,
-            role: 'user',
-        };
-
-        existingUsers.push(newUser);
-        localStorage.setItem('registered_users', JSON.stringify(existingUsers));
-
-        toast({
-            title: "Account Created",
-            description: "You have been successfully registered. Please log in.",
-        });
-        router.push('/login');
     };
     
   return (
@@ -92,6 +102,7 @@ export default function RegisterPage() {
                           required 
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
+                          disabled={isLoading}
                       />
                   </div>
                   <div className="grid gap-2">
@@ -102,6 +113,7 @@ export default function RegisterPage() {
                           required 
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
+                          disabled={isLoading}
                       />
                   </div>
                 </div>
@@ -114,6 +126,7 @@ export default function RegisterPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -125,6 +138,7 @@ export default function RegisterPage() {
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
+                      disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -135,10 +149,12 @@ export default function RegisterPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      disabled={isLoading}
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                Create an account
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Create an account
                 </Button>
             </div>
           </form>
