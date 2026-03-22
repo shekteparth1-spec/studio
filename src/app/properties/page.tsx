@@ -57,6 +57,7 @@ export default function PropertiesPage() {
     const loadProperties = () => {
         const storedPropertiesRaw = localStorage.getItem('properties');
         const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
+        
         // Only show approved properties for public view
         const approved = allProperties.filter((p: Property) => p.status === 'approved');
         setSourceProperties(approved);
