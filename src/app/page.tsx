@@ -13,7 +13,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
-        <section className="relative h-[60vh] w-full">
+        <section className="relative h-[80vh] w-full">
           {heroImage && (
             <Image
               src={heroImage.imageUrl}
@@ -24,23 +24,26 @@ export default function Home() {
               priority
             />
           )}
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white">
-            <h1 className="font-headline text-5xl font-bold md:text-7xl">
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white px-4">
+            <h1 className="font-headline text-5xl font-bold md:text-7xl drop-shadow-lg">
               Harvest Haven
             </h1>
-            <p className="mt-4 max-w-2xl text-lg md:text-xl">
-              Discover and book unique farmhouses and resorts for your next
-              escape.
+            <p className="mt-6 max-w-2xl text-lg md:text-2xl font-medium drop-shadow-md">
+              Discover and book unique farmhouses and resorts for your next escape into nature.
             </p>
-            <Button asChild className="mt-8" size="lg">
-              <Link href="#properties">Explore Stays</Link>
-            </Button>
+            <div className="mt-10 flex gap-4">
+              <Button asChild size="lg" className="rounded-full px-8">
+                <Link href="/properties">Explore All Stays</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="rounded-full px-8 bg-white/10 backdrop-blur-sm text-white border-white hover:bg-white/20">
+                <Link href="/about">Our Story</Link>
+              </Button>
+            </div>
           </div>
         </section>
         
         <HomeClient />
-
       </main>
       <Footer />
     </div>
