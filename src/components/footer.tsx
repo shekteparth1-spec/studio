@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="border-t bg-card">
       <div className="container mx-auto py-12">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4 px-4">
           <div className="space-y-4">
             <Logo />
             <p className="text-sm text-muted-foreground">
@@ -36,7 +36,7 @@ export default function Footer() {
             <h4 className="font-headline text-lg font-semibold">Legal</h4>
             <ul className="mt-4 space-y-2">
               <li>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary">
                   Privacy Policy
                 </Link>
               </li>
