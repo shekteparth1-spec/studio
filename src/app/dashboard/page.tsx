@@ -18,8 +18,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { properties as initialProperties, type Property, type User } from '@/lib/data';
-import { MoreHorizontal } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Edit, Eye, Trash } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -123,11 +123,19 @@ export default function UserDashboardPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>
+                              <Eye className="mr-2 h-4 w-4" /> View Listing
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/dashboard/edit-property/${property.id}`)}>
+                              <Edit className="mr-2 h-4 w-4" /> Edit Property
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               className='text-destructive'
                               onClick={() => setPropertyToDelete(property.id)}
-                            >Delete</DropdownMenuItem>
+                            >
+                              <Trash className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>

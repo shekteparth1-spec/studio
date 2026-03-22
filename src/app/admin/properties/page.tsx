@@ -17,9 +17,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { properties as initialProperties, users as staticUsers, type Property } from '@/lib/data';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Edit, Eye, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -52,13 +52,6 @@ export default function AdminPropertiesPage() {
       window.removeEventListener('storage', loadProperties);
     };
   }, []);
-
-  const handleEdit = () => {
-    toast({
-      title: "Coming Soon!",
-      description: "The edit functionality is under development.",
-    });
-  };
 
   const handleDelete = (propertyId: string) => {
     const storedPropertiesRaw = localStorage.getItem('properties');
@@ -118,12 +111,19 @@ export default function AdminPropertiesPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>View Listing</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/edit-property/${property.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/properties/${property.id}`)}>
+                            <Eye className="mr-2 h-4 w-4" /> View Listing
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className='text-destructive'
                             onClick={() => setPropertyToDelete(property.id)}
-                          >Delete</DropdownMenuItem>
+                          >
+                            <Trash className="mr-2 h-4 w-4" /> Delete
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                   </TableCell>
