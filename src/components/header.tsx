@@ -19,7 +19,6 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/properties', label: 'Properties' },
   { href: '/about', label: 'About Us' },
-  { href: '/contact', label: 'Contact' },
 ];
 
 export default function Header() {
@@ -29,7 +28,6 @@ export default function Header() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect runs only on the client, after hydration
     const user = localStorage.getItem('user');
     setIsAuthenticated(!!user);
     setIsClient(true);
@@ -40,8 +38,6 @@ export default function Header() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
-    // Also check on focus in case localStorage changed in another tab
     window.addEventListener('focus', handleStorageChange);
 
     return () => {
@@ -58,7 +54,6 @@ export default function Header() {
       description: "You have been successfully logged out.",
     });
     router.push('/');
-    // Manually trigger a storage event to update other tabs
     window.dispatchEvent(new Event('storage'));
   }
 
