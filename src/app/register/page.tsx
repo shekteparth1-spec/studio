@@ -24,13 +24,13 @@ export default function RegisterPage() {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
 
 
     const handleRegister = (e: React.FormEvent) => {
         e.preventDefault();
-        // Basic validation
-        if (!firstName || !lastName || !email || !password) {
+        if (!firstName || !lastName || !email || !password || !phone) {
             toast({
                 variant: "destructive",
                 title: "Registration Failed",
@@ -39,8 +39,6 @@ export default function RegisterPage() {
             return;
         }
 
-        // In a real app, you would add the user to your database here.
-        // For this demo, we'll store new users in localStorage.
         const existingUsers: User[] = JSON.parse(localStorage.getItem('registered_users') || '[]');
         if (existingUsers.some(u => u.email === email)) {
              toast({
@@ -55,6 +53,7 @@ export default function RegisterPage() {
             id: `user-${Date.now()}`,
             name: `${firstName} ${lastName}`,
             email,
+            phone,
             password,
             role: 'user',
         };
@@ -92,47 +91,58 @@ export default function RegisterPage() {
           <form onSubmit={handleRegister}>
             <div className="grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="first-name">First name</Label>
-                    <Input 
-                        id="first-name" 
-                        placeholder="Rohan" 
-                        required 
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                    />
+                  <div className="grid gap-2">
+                      <Label htmlFor="first-name">First name</Label>
+                      <Input 
+                          id="first-name" 
+                          placeholder="Rohan" 
+                          required 
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                      />
+                  </div>
+                  <div className="grid gap-2">
+                      <Label htmlFor="last-name">Last name</Label>
+                      <Input 
+                          id="last-name" 
+                          placeholder="Sharma" 
+                          required 
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                      />
+                  </div>
                 </div>
                 <div className="grid gap-2">
-                    <Label htmlFor="last-name">Last name</Label>
-                    <Input 
-                        id="last-name" 
-                        placeholder="Sharma" 
-                        required 
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                    />
-                </div>
-                </div>
-                <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                      id="email"
+                      type="email"
+                      placeholder="m@example.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                    id="password" 
-                    type="password" 
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+91 9876543210"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input 
+                      id="password" 
+                      type="password" 
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
                 <Button type="submit" className="w-full">
                 Create an account
