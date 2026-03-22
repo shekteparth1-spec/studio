@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link"
@@ -46,12 +45,13 @@ export default function LoginPage() {
       console.error("Login error:", error)
       let errorMessage = "Invalid email or password."
       
+      // auth/invalid-credential is the common error for both wrong pass and user not found in modern SDKs
       if (error.code === 'auth/invalid-credential') {
-        errorMessage = "We couldn't find an account with those credentials. Please check your email and password or sign up for a new account."
-      } else if (error.code === 'auth/user-not-found') {
-        errorMessage = "No account exists with this email address."
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = "Incorrect password. Please try again."
+        errorMessage = "No account found with these credentials. Please check your email/password or create a new account using the 'Sign up' link below."
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = "This account has been disabled."
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Too many failed attempts. Please try again later."
       }
 
       toast({
@@ -73,7 +73,7 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Login</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your credentials to access your owner dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -84,7 +84,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="name@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -98,7 +98,7 @@ export default function LoginPage() {
                     href="#"
                     className="ml-auto inline-block text-sm underline hover:text-primary transition-colors"
                   >
-                    Forgot your password?
+                    Forgot password?
                   </Link>
                 </div>
                 <div className="relative">

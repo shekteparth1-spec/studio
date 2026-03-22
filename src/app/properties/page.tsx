@@ -9,6 +9,7 @@ import {
   Star,
   Home as HomeIcon,
   Crosshair,
+  Loader2,
 } from 'lucide-react';
 
 import {
@@ -31,48 +32,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { properties as initialProperties, type Property } from '@/lib/data';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { useToast } from '@/hooks/use-toast';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [sourceProperties, setSourceProperties] = useState<Property[]>([]);
-  const [location, setLocation] = useState('');
+  const db = useFirestore();
+  const { toast } = useToast();
+  
+  const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
+  const [locationSearch, setLocationSearch] = useState('');
   const [propertyType, setPropertyType] = useState('any');
   const [priceRange, setPriceRange] = useState([1000, 100000]);
   const [bedrooms, setBedrooms] = useState('any');
-  const [areaRange, setAreaRange] = useState([500, 5000]);
-  const { toast } = useToast();
 
-  const handleNearMe = () => {
-    toast({
-      title: 'Coming Soon!',
-      description: 'The "Near Me" feature is under development.',
-    });
-  };
+  const publicPropertiesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'public_properties');
+  }, [db]);
+
+  const { data: properties, isLoading } = useCollection(publicPropertiesQuery);
 
   useEffect(() => {
-    const loadProperties = () => {
-        const storedPropertiesRaw = localStorage.getItem('properties');
-        const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
-        
-        // Only show approved properties for public view
-        const approved = allProperties.filter((p: Property) => p.status === 'approved');
-        setSourceProperties(approved);
-    };
-    
-    loadProperties();
-    window.addEventListener('storage', loadProperties);
-    return () => window.removeEventListener('storage', loadProperties);
-  }, []);
+    if (!properties) return;
 
-  useEffect(() => {
-    let filtered = sourceProperties;
+    let filtered = [...properties];
 
-    if (location) {
-      filtered = filtered.filter(p => p.location.toLowerCase().includes(location.toLowerCase()));
+    if (locationSearch) {
+      filtered = filtered.filter(p => 
+        p.city?.toLowerCase().includes(locationSearch.toLowerCase()) || 
+        p.location?.toLowerCase().includes(locationSearch.toLowerCase())
+      );
     }
 
     if (propertyType !== 'any') {
@@ -82,17 +74,23 @@ export default function PropertiesPage() {
     filtered = filtered.filter(p => p.pricePerNight >= priceRange[0] && p.pricePerNight <= priceRange[1]);
 
     if (bedrooms !== 'any') {
+      const count = parseInt(bedrooms, 10);
       if (bedrooms === '5+') {
-        filtered = filtered.filter(p => p.bedrooms >= 5);
+        filtered = filtered.filter(p => (p.numberOfBedrooms || p.bedrooms) >= 5);
       } else {
-        filtered = filtered.filter(p => p.bedrooms === parseInt(bedrooms, 10));
+        filtered = filtered.filter(p => (p.numberOfBedrooms || p.bedrooms) === count);
       }
     }
-    
-    filtered = filtered.filter(p => p.squareFeet >= areaRange[0] && p.squareFeet <= areaRange[1]);
 
-    setProperties(filtered);
-  }, [location, propertyType, priceRange, bedrooms, areaRange, sourceProperties]);
+    setFilteredProperties(filtered);
+  }, [locationSearch, propertyType, priceRange, bedrooms, properties]);
+
+  const handleNearMe = () => {
+    toast({
+      title: 'Location Service',
+      description: 'The "Near Me" feature is under maintenance. Try searching by city name.',
+    });
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -104,7 +102,7 @@ export default function PropertiesPage() {
               Find Your Perfect Stay
             </h1>
             <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-12">
-              Explore our handpicked selection of unique farmhouses and luxury resorts across India.
+              Explore our handpicked selection of unique farmhouses and luxury resorts.
             </p>
             
             <Card className="shadow-xl border-none max-w-5xl mx-auto">
@@ -116,8 +114,8 @@ export default function PropertiesPage() {
                       <Input
                         id="location"
                         placeholder="e.g., Nashik"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
+                        value={locationSearch}
+                        onChange={(e) => setLocationSearch(e.target.value)}
                         className="rounded-full px-4"
                       />
                       <Button variant="outline" size="icon" onClick={handleNearMe} title="Near Me" className="rounded-full shrink-0">
@@ -179,19 +177,20 @@ export default function PropertiesPage() {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-10">
               <h2 className="font-headline text-2xl font-bold">
-                {properties.length} {properties.length === 1 ? 'Stay' : 'Stays'} Found
+                {isLoading ? 'Searching...' : `${filteredProperties.length} ${filteredProperties.length === 1 ? 'Stay' : 'Stays'} Found`}
               </h2>
             </div>
 
-            {properties.length > 0 ? (
+            {isLoading ? (
+               <div className="flex h-64 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredProperties.length > 0 ? (
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {properties.map((property) => {
-                  const imageUrl = property.imageUrls && property.imageUrls.length > 0
-                    ? property.imageUrls[0]
+                {filteredProperties.map((property) => {
+                  const imageUrl = property.photoUrls && property.photoUrls.length > 0
+                    ? property.photoUrls[0]
                     : `https://picsum.photos/seed/${property.id}/600/400`;
-                  const imageHint = property.imageHints && property.imageHints.length > 0
-                    ? property.imageHints[0]
-                    : 'property photo';
                     
                   return (
                     <Card
@@ -203,10 +202,9 @@ export default function PropertiesPage() {
                           <div className="relative aspect-video w-full">
                               <Image
                                 src={imageUrl}
-                                alt={property.name}
+                                alt={property.title || property.name}
                                 fill
                                 className="object-cover transition-transform duration-500 hover:scale-110"
-                                data-ai-hint={imageHint}
                               />
                           </div>
                         </Link>
@@ -216,29 +214,27 @@ export default function PropertiesPage() {
                           <div>
                             <CardTitle className="mb-1 font-headline text-xl">
                               <Link href={`/properties/${property.id}`} className="hover:text-primary transition-colors">
-                                {property.name}
+                                {property.title || property.name}
                               </Link>
                             </CardTitle>
                             <CardDescription className="flex items-center gap-1.5">
                               <MapPin size={14} className="text-primary" />
-                              {property.location}
+                              {property.city}, {property.stateProvince || ''}
                             </CardDescription>
                           </div>
-                          <Badge variant="secondary" className="bg-primary/10 text-primary border-none">
-                            {property.type === 'farmhouse'
-                              ? 'Farmhouse'
-                              : 'Resort'}
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-none capitalize">
+                            {property.type}
                           </Badge>
                         </div>
 
                         <div className="mt-5 flex items-center justify-between text-sm text-muted-foreground border-t pt-4">
                           <div className="flex items-center gap-2">
                             <BedDouble size={16} className="text-primary" />
-                            <span>{property.bedrooms} Beds</span>
+                            <span>{property.numberOfBedrooms || property.bedrooms} Beds</span>
                           </div>
                           <div className="flex items-center gap-2">
                            <HomeIcon size={16} className="text-primary" />
-                            <span>{property.squareFeet} sq ft</span>
+                            <span>{property.squareFootage || property.squareFeet} sq ft</span>
                           </div>
                         </div>
                       </CardContent>
@@ -249,7 +245,7 @@ export default function PropertiesPage() {
                             /night
                           </span>
                         </p>
-                        {property.rating > 0 && (
+                        {property.rating && (
                           <div className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md">
                             <Star size={14} className="text-primary fill-primary" />
                             <span className="font-bold text-primary">{property.rating}</span>
@@ -267,11 +263,10 @@ export default function PropertiesPage() {
                     <Button 
                       variant="link" 
                       onClick={() => {
-                        setLocation('');
+                        setLocationSearch('');
                         setPropertyType('any');
                         setPriceRange([1000, 100000]);
                         setBedrooms('any');
-                        setAreaRange([500, 5000]);
                       }}
                       className="mt-4 text-primary"
                     >

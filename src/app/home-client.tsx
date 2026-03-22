@@ -2,12 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   BedDouble,
   MapPin,
   Star,
   Home as HomeIcon,
+  Loader2,
 } from 'lucide-react';
 
 import {
@@ -19,23 +20,18 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { properties as initialProperties, type Property } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, limit } from 'firebase/firestore';
 
 export default function HomeClient() {
-  const [properties, setProperties] = useState<Property[]>([]);
+  const db = useFirestore();
 
-  useEffect(() => {
-    const loadProperties = () => {
-      const storedPropertiesRaw = localStorage.getItem('properties');
-      const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
-      const approvedProperties = allProperties.filter((p: Property) => p.status === 'approved');
-      setProperties(approvedProperties.slice(0, 6)); // Show only top 6 as featured
-    };
+  const publicPropertiesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'public_properties'), limit(6));
+  }, [db]);
 
-    loadProperties();
-    window.addEventListener('storage', loadProperties);
-    return () => window.removeEventListener('storage', loadProperties);
-  }, []);
+  const { data: properties, isLoading } = useCollection(publicPropertiesQuery);
 
   return (
     <section id="featured-properties" className="py-20 bg-background">
@@ -50,15 +46,16 @@ export default function HomeClient() {
           </p>
         </div>
 
-        {properties.length > 0 ? (
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : properties && properties.length > 0 ? (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {properties.map((property) => {
-              const imageUrl = property.imageUrls && property.imageUrls.length > 0
-                ? property.imageUrls[0]
+              const imageUrl = property.photoUrls && property.photoUrls.length > 0
+                ? property.photoUrls[0]
                 : `https://picsum.photos/seed/${property.id}/600/400`;
-              const imageHint = property.imageHints && property.imageHints.length > 0
-                ? property.imageHints[0]
-                : 'property photo';
 
               return (
                 <Card
@@ -70,10 +67,9 @@ export default function HomeClient() {
                       <div className="relative aspect-video w-full overflow-hidden">
                         <Image
                           src={imageUrl}
-                          alt={property.name}
+                          alt={property.title || property.name}
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-110"
-                          data-ai-hint={imageHint}
                         />
                       </div>
                     </Link>
@@ -83,27 +79,27 @@ export default function HomeClient() {
                       <div>
                         <CardTitle className="mb-1 font-headline text-xl">
                           <Link href={`/properties/${property.id}`} className="hover:text-primary transition-colors">
-                            {property.name}
+                            {property.title || property.name}
                           </Link>
                         </CardTitle>
                         <CardDescription className="flex items-center gap-1.5 text-muted-foreground">
                           <MapPin size={14} className="text-primary" />
-                          {property.location}
+                          {property.city}, {property.stateProvince || ''}
                         </CardDescription>
                       </div>
-                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none">
-                        {property.type === 'farmhouse' ? 'Farmhouse' : 'Resort'}
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none capitalize">
+                        {property.type}
                       </Badge>
                     </div>
 
                     <div className="mt-5 flex items-center justify-between text-sm text-muted-foreground border-t pt-4">
                       <div className="flex items-center gap-2">
                         <BedDouble size={16} className="text-primary" />
-                        <span>{property.bedrooms} Beds</span>
+                        <span>{property.numberOfBedrooms || property.bedrooms} Beds</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <HomeIcon size={16} className="text-primary" />
-                        <span>{property.squareFeet} sq ft</span>
+                        <span>{property.squareFootage || property.squareFeet} sq ft</span>
                       </div>
                     </div>
                   </CardContent>
@@ -114,7 +110,7 @@ export default function HomeClient() {
                         /night
                       </span>
                     </p>
-                    {property.rating > 0 && (
+                    {property.rating && (
                       <div className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md">
                         <Star size={14} className="text-primary fill-primary" />
                         <span className="font-bold text-primary">{property.rating}</span>
