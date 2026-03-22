@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +32,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
 
 export default function AdminPropertiesPage() {
   const router = useRouter();
@@ -69,10 +67,7 @@ export default function AdminPropertiesPage() {
     
     localStorage.setItem('properties', JSON.stringify(updatedProperties));
     
-    // Directly update state for immediate UI feedback
     setProperties(updatedProperties);
-    
-    // Dispatch event for other tabs/components
     window.dispatchEvent(new Event('storage'));
     
     toast({
@@ -110,13 +105,7 @@ export default function AdminPropertiesPage() {
                 <TableRow key={property.id}>
                   <TableCell className="font-medium">{property.name}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                       <Avatar className="h-8 w-8">
-                         <AvatarImage src={`https://i.pravatar.cc/40?u=${owner?.id}`} />
-                         <AvatarFallback>{owner?.name?.charAt(0) || 'U'}</AvatarFallback>
-                       </Avatar>
-                       <span>{owner?.name}</span>
-                    </div>
+                    <span>{owner?.name}</span>
                   </TableCell>
                   <TableCell>INR {property.pricePerNight}/night</TableCell>
                   <TableCell className="text-right">

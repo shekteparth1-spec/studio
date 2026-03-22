@@ -20,7 +20,6 @@ import {
 import { properties as initialProperties, users, type Property } from '@/lib/data';
 import { Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboardPage() {
@@ -90,13 +89,7 @@ export default function AdminDashboardPage() {
                 <TableRow key={property.id}>
                   <TableCell className="font-medium">{property.name}<br/><span className="text-xs text-muted-foreground">{property.location}</span></TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                       <Avatar className="h-8 w-8">
-                         <AvatarImage src={`https://i.pravatar.cc/40?u=${owner?.id}`} />
-                         <AvatarFallback>{owner?.name.charAt(0)}</AvatarFallback>
-                       </Avatar>
-                       <span>{owner?.name}</span>
-                    </div>
+                    <span>{owner?.name}</span>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{property.type}</Badge>

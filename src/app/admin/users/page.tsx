@@ -20,8 +20,6 @@ import { users } from '@/lib/data';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
 
 export default function AdminUsersPage() {
   return (
@@ -46,13 +44,7 @@ export default function AdminUsersPage() {
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                     <Avatar className="h-8 w-8">
-                       <AvatarImage src={`https://i.pravatar.cc/40?u=${user.id}`} />
-                       <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                     </Avatar>
-                     <span className="font-medium">{user.name}</span>
-                  </div>
+                   <span className="font-medium">{user.name}</span>
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
