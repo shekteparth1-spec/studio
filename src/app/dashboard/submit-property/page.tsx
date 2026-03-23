@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Sparkles, Loader2, Upload, X } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -39,6 +39,7 @@ import {
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -136,7 +137,7 @@ export default function SubmitPropertyPage() {
     const newFiles = Array.from(files).slice(0, 8 - currentPhotos.length);
 
     const filePromises = newFiles.map(file => {
-      // 3MB limit as requested
+      // 3MB individual file limit
       if (file.size > 3 * 1024 * 1024) {
         toast({
           variant: "destructive",
@@ -178,6 +179,18 @@ export default function SubmitPropertyPage() {
           variant: "destructive",
           title: 'Error',
           description: 'You must be logged in to submit a property.',
+      });
+      return;
+    }
+
+    // Calculate total size of photos array to prevent Firestore 1MB document limit error
+    const totalSize = values.photos.reduce((acc, p) => acc + p.length, 0);
+    // Firestore limit is 1MB. Base64 strings are larger. We aim for ~800KB total to be safe.
+    if (totalSize > 800000) {
+      toast({
+        variant: "destructive",
+        title: "Photos too large",
+        description: "The combined size of your photos exceeds the database limit. Please use fewer photos or smaller images.",
       });
       return;
     }
@@ -229,10 +242,14 @@ export default function SubmitPropertyPage() {
 
     } catch (error: any) {
       console.error("Submission failed:", error);
+      let errorMessage = 'Could not submit your property.';
+      if (error.message?.includes('longer than 1048487 bytes')) {
+        errorMessage = 'Your listing is too large. Please use smaller photos (under 100KB each is best).';
+      }
       toast({
           variant: "destructive",
           title: 'Submission Failed',
-          description: error.message || 'Could not submit your property. Check if the combined photo size is too large (max 1MB total per listing).',
+          description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
@@ -245,7 +262,6 @@ export default function SubmitPropertyPage() {
         <CardTitle className="font-headline text-2xl">Submit a Property</CardTitle>
         <CardDescription>
           Fill out the details below to list your property on Harvest Haven. 
-          <span className="block mt-1 text-xs text-muted-foreground">Note: Maximum 8 photos, each under 3MB. Total listing size must stay under 1MB.</span>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -433,6 +449,13 @@ export default function SubmitPropertyPage() {
               render={() => (
                 <FormItem>
                   <FormLabel className="font-bold">Photos (Max 8, 3MB each)</FormLabel>
+                  <Alert variant="default" className="bg-muted/50 border-none mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle className="text-xs font-bold uppercase tracking-wider">Storage Limit</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      The total size of all photos combined must be under **1MB**. For best results, use compressed images (under 100KB each).
+                    </AlertDescription>
+                  </Alert>
                   <FormControl>
                     <div>
                       <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10 hover:bg-muted/30 transition-colors">

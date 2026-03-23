@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Sparkles, Loader2, Upload, X, ArrowLeft } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -39,6 +39,7 @@ import {
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -200,6 +201,18 @@ export default function EditPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!property || !user || !db) return;
 
+    // Calculate total size of photos array to prevent Firestore 1MB document limit error
+    const totalSize = values.photos.reduce((acc, p) => acc + p.length, 0);
+    // Firestore limit is 1MB. Base64 strings are larger. We aim for ~800KB total to be safe.
+    if (totalSize > 800000) {
+      toast({
+        variant: "destructive",
+        title: "Photos too large",
+        description: "The combined size of your photos exceeds the database limit. Please use fewer photos or smaller images.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const updatedData = {
@@ -235,10 +248,14 @@ export default function EditPropertyPage() {
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Update failed:", error);
+      let errorMessage = 'There was an error updating your property.';
+      if (error.message?.includes('longer than 1048487 bytes')) {
+        errorMessage = 'Your listing is too large. Please use smaller photos (under 100KB each is best).';
+      }
       toast({
           variant: "destructive",
           title: 'Update Failed',
-          description: error.message || 'There was an error updating your property. Check if total image size exceeds 1MB.',
+          description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
@@ -446,6 +463,13 @@ export default function EditPropertyPage() {
                 render={() => (
                   <FormItem>
                     <FormLabel>Photos (Max 8, 3MB each)</FormLabel>
+                    <Alert variant="default" className="bg-muted/50 border-none mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle className="text-xs font-bold uppercase tracking-wider">Storage Limit</AlertTitle>
+                      <AlertDescription className="text-xs">
+                        The total size of all photos combined must be under **1MB**. For best results, use compressed images (under 100KB each).
+                      </AlertDescription>
+                    </Alert>
                     <FormControl>
                       <div>
                         <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10">
