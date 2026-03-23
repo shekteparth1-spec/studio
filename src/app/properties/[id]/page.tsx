@@ -120,7 +120,7 @@ export default function PropertyDetailsPage() {
       toast({
         variant: "destructive",
         title: "Contact Unavailable",
-        description: "The owner has not provided a contact number for this listing.",
+        description: "The owner has not provided a contact number in their profile.",
       });
       return;
     }
@@ -134,7 +134,7 @@ export default function PropertyDetailsPage() {
       toast({
         variant: "destructive",
         title: "Contact Unavailable",
-        description: "The owner has not provided a contact number for this listing.",
+        description: "The owner has not provided a contact number in their profile.",
       });
       return;
     }
@@ -290,7 +290,7 @@ export default function PropertyDetailsPage() {
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Contact Unavailable</AlertTitle>
                         <AlertDescription className="text-xs">
-                          The owner has not provided a verified contact number.
+                          The owner has not provided a contact number in their profile.
                         </AlertDescription>
                       </Alert>
                     )}
