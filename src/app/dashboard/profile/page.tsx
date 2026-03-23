@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -56,7 +57,7 @@ export default function ProfilePage() {
       toast({
         variant: "destructive",
         title: "Invalid Phone Number",
-        description: "Please enter a valid phone number so guests can contact you.",
+        description: "Please enter a valid phone number so guests can contact you via WhatsApp or phone call.",
       });
       return;
     }
@@ -125,7 +126,7 @@ export default function ProfilePage() {
                 <p className="text-[10px] text-muted-foreground">Email cannot be changed.</p>
             </div>
              <div className="grid gap-2">
-                <Label htmlFor="phone">Phone Number (Required for bookings)</Label>
+                <Label htmlFor="phone">Phone Number (For WhatsApp/Calls)</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -139,7 +140,7 @@ export default function ProfilePage() {
                     required
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground">Guests will use this to WhatsApp or call you.</p>
+                <p className="text-[10px] text-muted-foreground">Guests will use this number to contact you directly from your listings.</p>
             </div>
              <Button type="submit" className="w-full sm:w-auto rounded-full px-8 mt-4" disabled={isUpdating}>
                 {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
