@@ -10,6 +10,7 @@ import {
   Home as HomeIcon,
   Crosshair,
   Loader2,
+  Search,
 } from 'lucide-react';
 
 import {
@@ -61,9 +62,11 @@ export default function PropertiesPage() {
     let filtered = [...properties];
 
     if (locationSearch) {
+      const search = locationSearch.toLowerCase();
       filtered = filtered.filter(p => 
-        p.city?.toLowerCase().includes(locationSearch.toLowerCase()) || 
-        p.location?.toLowerCase().includes(locationSearch.toLowerCase())
+        (p.city || '').toLowerCase().includes(search) || 
+        (p.location || '').toLowerCase().includes(search) ||
+        (p.title || p.name || '').toLowerCase().includes(search)
       );
     }
 
@@ -71,14 +74,14 @@ export default function PropertiesPage() {
       filtered = filtered.filter(p => p.type === propertyType);
     }
     
-    filtered = filtered.filter(p => p.pricePerNight >= priceRange[0] && p.pricePerNight <= priceRange[1]);
+    filtered = filtered.filter(p => (p.pricePerNight || 0) >= priceRange[0] && (p.pricePerNight || 0) <= priceRange[1]);
 
     if (bedrooms !== 'any') {
       const count = parseInt(bedrooms, 10);
       if (bedrooms === '5+') {
-        filtered = filtered.filter(p => (p.numberOfBedrooms || p.bedrooms) >= 5);
+        filtered = filtered.filter(p => (p.numberOfBedrooms || p.bedrooms || 0) >= 5);
       } else {
-        filtered = filtered.filter(p => (p.numberOfBedrooms || p.bedrooms) === count);
+        filtered = filtered.filter(p => (p.numberOfBedrooms || p.bedrooms || 0) === count);
       }
     }
 
@@ -96,50 +99,53 @@ export default function PropertiesPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 bg-background">
-        <section className="py-12 bg-primary/5">
+        <section className="py-16 bg-primary/5">
           <div className="container mx-auto px-4">
-            <h1 className="mb-4 text-center font-headline text-4xl font-bold md:text-5xl">
+            <h1 className="mb-6 text-center font-headline text-4xl font-bold md:text-6xl text-primary">
               Find Your Perfect Stay
             </h1>
-            <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-12">
-              Explore our handpicked selection of unique farmhouses and luxury resorts.
+            <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-16 text-lg">
+              Handpicked farmhouses and luxury resorts for your next escape.
             </p>
             
-            <Card className="shadow-xl border-none max-w-5xl mx-auto">
-              <CardContent className="p-6 md:p-8">
-                <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="shadow-2xl border-none max-w-5xl mx-auto overflow-hidden rounded-3xl">
+              <CardContent className="p-8 md:p-10">
+                <div className="grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-3 md:col-span-2 lg:col-span-1">
-                    <Label htmlFor="location" className="text-primary font-semibold">Location</Label>
+                    <Label htmlFor="location" className="text-primary font-bold uppercase text-xs tracking-widest">Location</Label>
                     <div className="flex gap-2">
-                      <Input
-                        id="location"
-                        placeholder="e.g., Nashik"
-                        value={locationSearch}
-                        onChange={(e) => setLocationSearch(e.target.value)}
-                        className="rounded-full px-4"
-                      />
-                      <Button variant="outline" size="icon" onClick={handleNearMe} title="Near Me" className="rounded-full shrink-0">
-                        <Crosshair className="h-4 w-4" />
+                      <div className="relative flex-1">
+                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="location"
+                          placeholder="e.g., Nashik"
+                          value={locationSearch}
+                          onChange={(e) => setLocationSearch(e.target.value)}
+                          className="rounded-full pl-10 h-12"
+                        />
+                      </div>
+                      <Button variant="outline" size="icon" onClick={handleNearMe} title="Near Me" className="rounded-full h-12 w-12 shrink-0 border-2">
+                        <Crosshair className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="property-type" className="text-primary font-semibold">Property Type</Label>
+                    <Label htmlFor="property-type" className="text-primary font-bold uppercase text-xs tracking-widest">Type</Label>
                     <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger id="property-type" className="rounded-full">
+                      <SelectTrigger id="property-type" className="rounded-full h-12 border-2">
                         <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="any">Any Type</SelectItem>
+                        <SelectItem value="any">All Stays</SelectItem>
                         <SelectItem value="farmhouse">Farmhouse</SelectItem>
                         <SelectItem value="resort">Resort</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="bedrooms" className="text-primary font-semibold">Bedrooms</Label>
+                    <Label htmlFor="bedrooms" className="text-primary font-bold uppercase text-xs tracking-widest">Bedrooms</Label>
                     <Select value={bedrooms} onValueChange={setBedrooms}>
-                      <SelectTrigger id="bedrooms" className="rounded-full">
+                      <SelectTrigger id="bedrooms" className="rounded-full h-12 border-2">
                         <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
@@ -152,18 +158,18 @@ export default function PropertiesPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-4">
-                    <Label className="text-primary font-semibold">Price per night (INR)</Label>
-                    <div className='text-xs text-muted-foreground flex justify-between font-medium'>
-                      <span>INR {priceRange[0]}</span>
-                      <span>INR {priceRange[1]}</span>
+                  <div className="space-y-6">
+                    <Label className="text-primary font-bold uppercase text-xs tracking-widest">Price Limit (INR)</Label>
+                    <div className='text-xs text-muted-foreground flex justify-between font-bold'>
+                      <span>{priceRange[0].toLocaleString()}</span>
+                      <span>{priceRange[1].toLocaleString()}</span>
                     </div>
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
                       min={1000}
                       max={100000}
-                      step={500}
+                      step={1000}
                       className="py-2"
                     />
                   </div>
@@ -173,81 +179,89 @@ export default function PropertiesPage() {
           </div>
         </section>
 
-        <section id="properties" className="py-16">
+        <section id="properties" className="py-20">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-10">
-              <h2 className="font-headline text-2xl font-bold">
-                {isLoading ? 'Searching...' : `${filteredProperties.length} ${filteredProperties.length === 1 ? 'Stay' : 'Stays'} Found`}
+            <div className="flex justify-between items-center mb-12">
+              <h2 className="font-headline text-3xl font-bold border-l-4 border-primary pl-4">
+                {isLoading ? 'Searching...' : `${filteredProperties.length} Matches Found`}
               </h2>
             </div>
 
             {isLoading ? (
-               <div className="flex h-64 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+               <div className="flex h-64 flex-col items-center justify-center gap-4">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="text-muted-foreground font-medium">Fetching the best stays for you...</p>
               </div>
             ) : filteredProperties.length > 0 ? (
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
                 {filteredProperties.map((property) => {
                   const imageUrl = property.photoUrls && property.photoUrls.length > 0
                     ? property.photoUrls[0]
-                    : `https://picsum.photos/seed/${property.id}/600/400`;
-                    
+                    : (property.imageUrls && property.imageUrls.length > 0 ? property.imageUrls[0] : `https://picsum.photos/seed/${property.id}/600/400`);
+                  
+                  const title = property.title || property.name || 'Beautiful Stay';
+                  const city = property.city || property.location || 'Unknown';
+                  const bedrooms = property.numberOfBedrooms || property.bedrooms || 0;
+                  const sqft = property.squareFootage || property.squareFeet || 0;
+                  const price = property.pricePerNight || 0;
+
                   return (
                     <Card
                       key={property.id}
-                      className="overflow-hidden transition-all hover:shadow-2xl border-none shadow-md"
+                      className="overflow-hidden transition-all hover:shadow-2xl border-none shadow-lg group rounded-2xl"
                     >
                       <CardHeader className="p-0">
                         <Link href={`/properties/${property.id}`}>
-                          <div className="relative aspect-video w-full">
+                          <div className="relative aspect-[4/3] w-full overflow-hidden">
                               <Image
                                 src={imageUrl}
-                                alt={property.title || property.name}
+                                alt={title}
                                 fill
-                                className="object-cover transition-transform duration-500 hover:scale-110"
+                                className="object-cover transition-transform duration-700 group-hover:scale-110"
                               />
+                              <div className="absolute top-4 left-4">
+                                <Badge className="bg-white/90 text-primary hover:bg-white backdrop-blur-sm border-none shadow-md capitalize font-bold px-3 py-1">
+                                  {property.type}
+                                </Badge>
+                              </div>
                           </div>
                         </Link>
                       </CardHeader>
-                      <CardContent className="p-5">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="mb-1 font-headline text-xl">
-                              <Link href={`/properties/${property.id}`} className="hover:text-primary transition-colors">
-                                {property.title || property.name}
-                              </Link>
-                            </CardTitle>
-                            <CardDescription className="flex items-center gap-1.5">
-                              <MapPin size={14} className="text-primary" />
-                              {property.city}, {property.stateProvince || ''}
-                            </CardDescription>
-                          </div>
-                          <Badge variant="secondary" className="bg-primary/10 text-primary border-none capitalize">
-                            {property.type}
-                          </Badge>
+                      <CardContent className="p-6">
+                        <div className="mb-4">
+                          <CardTitle className="mb-2 font-headline text-2xl truncate">
+                            <Link href={`/properties/${property.id}`} className="hover:text-primary transition-colors">
+                              {title}
+                            </Link>
+                          </CardTitle>
+                          <CardDescription className="flex items-center gap-2 text-muted-foreground font-medium">
+                            <MapPin size={16} className="text-primary" />
+                            {city}
+                          </CardDescription>
                         </div>
 
-                        <div className="mt-5 flex items-center justify-between text-sm text-muted-foreground border-t pt-4">
+                        <div className="flex items-center justify-between text-sm font-semibold text-foreground/70 bg-muted/30 p-3 rounded-xl">
                           <div className="flex items-center gap-2">
-                            <BedDouble size={16} className="text-primary" />
-                            <span>{property.numberOfBedrooms || property.bedrooms} Beds</span>
+                            <BedDouble size={18} className="text-primary" />
+                            <span>{bedrooms} Beds</span>
                           </div>
+                          <Separator orientation="vertical" className="h-4 bg-muted-foreground/20" />
                           <div className="flex items-center gap-2">
-                           <HomeIcon size={16} className="text-primary" />
-                            <span>{property.squareFootage || property.squareFeet} sq ft</span>
+                           <HomeIcon size={18} className="text-primary" />
+                            <span>{sqft} Sq Ft</span>
                           </div>
                         </div>
                       </CardContent>
-                      <CardFooter className="flex items-center justify-between p-5 pt-0">
-                        <p className="text-xl font-bold text-primary">
-                          INR {property.pricePerNight}
-                          <span className="text-sm font-normal text-muted-foreground ml-1">
-                            /night
-                          </span>
-                        </p>
+                      <CardFooter className="flex items-center justify-between p-6 pt-0 border-t border-muted/50 mt-2 pt-4">
+                        <div className="flex flex-col">
+                           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Per Night</span>
+                           <p className="text-2xl font-bold text-primary">
+                            INR {price.toLocaleString()}
+                          </p>
+                        </div>
                         {property.rating && (
-                          <div className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md">
-                            <Star size={14} className="text-primary fill-primary" />
+                          <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
+                            <Star size={16} className="text-primary fill-primary" />
                             <span className="font-bold text-primary">{property.rating}</span>
                           </div>
                         )}
@@ -257,18 +271,19 @@ export default function PropertiesPage() {
                 })}
               </div>
             ) : (
-                <div className="text-center py-20 bg-muted/20 rounded-3xl border-2 border-dashed">
-                    <h3 className="font-headline text-2xl font-bold">No stays match your filters</h3>
-                    <p className="text-muted-foreground mt-2">Try adjusting your filters or searching for a different location.</p>
+                <div className="text-center py-24 bg-muted/20 rounded-[3rem] border-2 border-dashed border-muted max-w-4xl mx-auto px-6">
+                    <Search className="h-16 w-16 text-muted-foreground mx-auto mb-6 opacity-20" />
+                    <h3 className="font-headline text-3xl font-bold text-foreground">No stays match your criteria</h3>
+                    <p className="text-muted-foreground mt-4 text-lg">Try widening your price range or searching for a different city.</p>
                     <Button 
-                      variant="link" 
+                      variant="outline" 
                       onClick={() => {
                         setLocationSearch('');
                         setPropertyType('any');
                         setPriceRange([1000, 100000]);
                         setBedrooms('any');
                       }}
-                      className="mt-4 text-primary"
+                      className="mt-8 rounded-full px-8 h-12 border-2 border-primary text-primary hover:bg-primary/5 font-bold"
                     >
                       Clear all filters
                     </Button>
