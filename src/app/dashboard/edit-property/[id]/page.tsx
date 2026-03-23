@@ -207,7 +207,7 @@ export default function EditPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!property || !user || !db) return;
 
-    // Critical check for owner phone number
+    // Critical check for owner phone number from profile
     const ownerPhone = profile?.phoneNumber || '';
     if (!ownerPhone) {
       toast({
@@ -243,7 +243,7 @@ export default function EditPropertyPage() {
         description: values.description,
         amenityIds: values.amenities,
         photoUrls: values.photos,
-        ownerPhoneNumber: ownerPhone,
+        ownerPhoneNumber: ownerPhone, // Ensuring profile phone is attached
       };
 
       const userDocRef = doc(db, 'users', user.uid, 'properties', property.id);
@@ -258,7 +258,7 @@ export default function EditPropertyPage() {
 
       toast({
         title: 'Property Updated',
-        description: 'Your property details have been successfully updated.',
+        description: 'Your property details and contact number have been successfully updated.',
       });
       
       router.push('/dashboard');
@@ -292,7 +292,7 @@ export default function EditPropertyPage() {
         <CardHeader>
           <CardTitle className="font-headline">Edit Property: {property?.title || property?.name}</CardTitle>
           <CardDescription>
-            Update your property information below. Max 8 photos, 3MB each.
+            Update your property information below. Max 8 photos, total size under 1MB.
           </CardDescription>
         </CardHeader>
         <CardContent>

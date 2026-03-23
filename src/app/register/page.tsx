@@ -36,42 +36,56 @@ export default function RegisterPage() {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!firstName || !lastName || !email || !password || !phone) {
+        
+        const trimmedFirstName = firstName.trim();
+        const trimmedLastName = lastName.trim();
+        const trimmedEmail = email.trim();
+        const trimmedPhone = phone.trim();
+
+        if (!trimmedFirstName || !trimmedLastName || !trimmedEmail || !password || !trimmedPhone) {
             toast({
                 variant: "destructive",
                 title: "Registration Failed",
-                description: "Please fill in all fields.",
+                description: "Please fill in all fields correctly.",
             });
             return;
         }
 
         setIsLoading(true);
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
             const user = userCredential.user;
 
             // Create user profile in Firestore
             await setDoc(doc(db, 'users', user.uid), {
                 id: user.uid,
-                firstName,
-                lastName,
-                email,
-                phoneNumber: phone,
+                firstName: trimmedFirstName,
+                lastName: trimmedLastName,
+                email: trimmedEmail,
+                phoneNumber: trimmedPhone, // Standardized field name
                 registrationDate: new Date().toISOString(),
-                role: 'Owner' // Default role for new signups
+                role: 'Owner'
             });
 
             toast({
                 title: "Account Created",
-                description: "Welcome to Harvest Haven! Redirecting to dashboard...",
+                description: "Welcome to Harvest Haven! You can now start listing properties.",
             });
             router.push('/dashboard');
         } catch (error: any) {
-            console.error("Registration error:", error);
+            let message = "An error occurred during registration.";
+            if (error.code === 'auth/email-already-in-use') {
+              message = "This email is already registered.";
+            } else if (error.code === 'auth/weak-password') {
+              message = "The password is too weak.";
+            } else if (error.code === 'auth/invalid-email') {
+              message = "The email address is invalid.";
+            }
+
             toast({
                 variant: "destructive",
                 title: "Registration Failed",
-                description: error.message || "An error occurred during registration.",
+                description: message,
             });
         } finally {
             setIsLoading(false);
@@ -83,11 +97,11 @@ export default function RegisterPage() {
        <div className="absolute top-8 left-8">
         <Logo />
       </div>
-      <Card className="mx-auto max-w-sm">
+      <Card className="mx-auto w-full max-w-md shadow-lg border-none">
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">Sign Up</CardTitle>
+          <CardTitle className="font-headline text-2xl text-primary">Create Account</CardTitle>
           <CardDescription>
-            Enter your information to create an account
+            Join Harvest Haven to list your farmhouses or resorts.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -122,7 +136,7 @@ export default function RegisterPage() {
                   <Input
                       id="email"
                       type="email"
-                      placeholder="m@example.com"
+                      placeholder="name@example.com"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -130,7 +144,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number (For Bookings)</Label>
                   <Input
                       id="phone"
                       type="tel"
@@ -140,27 +154,29 @@ export default function RegisterPage() {
                       onChange={(e) => setPhone(e.target.value)}
                       disabled={isLoading}
                   />
+                  <p className="text-[10px] text-muted-foreground">Guests will use this to contact you.</p>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="password">Password</Label>
                   <Input 
                       id="password" 
                       type="password" 
+                      placeholder="••••••••"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isLoading}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full rounded-full" disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Create an account
+                    Create Account
                 </Button>
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/login" className="underline">
+            <Link href="/login" className="underline font-semibold text-primary hover:text-primary/80 transition-colors">
               Log in
             </Link>
           </div>

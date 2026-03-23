@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { Loader2, Phone } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -29,14 +29,16 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [hasLoadedData, setHasLoadedData] = useState(false);
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !hasLoadedData) {
       setFirstName(profile.firstName || '');
       setLastName(profile.lastName || '');
       setPhone(profile.phoneNumber || '');
+      setHasLoadedData(true);
     }
-  }, [profile]);
+  }, [profile, hasLoadedData]);
 
   if (isUserLoading || isProfileLoading) {
     return (
@@ -52,11 +54,13 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!db || !user) return;
 
-    if (!phone || phone.trim().length < 10) {
+    const trimmedPhone = phone.trim();
+
+    if (!trimmedPhone || trimmedPhone.length < 10) {
       toast({
         variant: "destructive",
         title: "Phone Number Required",
-        description: "Please enter your profile phone number so guests can contact you via WhatsApp or phone call.",
+        description: "Please enter a valid phone number so guests can contact you.",
       });
       return;
     }
@@ -64,21 +68,28 @@ export default function ProfilePage() {
     setIsUpdating(true);
     try {
       const docRef = doc(db, 'users', user.uid);
-      await updateDoc(docRef, {
-        firstName,
-        lastName,
-        phoneNumber: phone.trim(),
-      });
+      
+      // Using setDoc with merge: true is more robust than updateDoc
+      // because it handles cases where the document might not exist yet.
+      await setDoc(docRef, {
+        id: user.uid,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: user.email,
+        phoneNumber: trimmedPhone,
+        registrationDate: profile?.registrationDate || new Date().toISOString(),
+        role: profile?.role || 'Owner'
+      }, { merge: true });
 
       toast({
         title: "Profile Updated",
-        description: "Your information and profile phone number have been successfully updated.",
+        description: "Your contact information has been successfully saved.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Update Failed",
-        description: "There was an error updating your profile. Please try again.",
+        description: error.message || "There was an error updating your profile.",
       });
     } finally {
       setIsUpdating(false);
@@ -110,6 +121,7 @@ export default function ProfilePage() {
                       value={firstName} 
                       onChange={(e) => setFirstName(e.target.value)} 
                       disabled={isUpdating}
+                      required
                     />
                 </div>
                 <div className="grid gap-2">
@@ -119,16 +131,17 @@ export default function ProfilePage() {
                       value={lastName} 
                       onChange={(e) => setLastName(e.target.value)} 
                       disabled={isUpdating}
+                      required
                     />
                 </div>
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" value={user.email || ''} readOnly className="bg-muted text-muted-foreground" />
-                <p className="text-[10px] text-muted-foreground">Email cannot be changed.</p>
+                <Input id="email" type="email" value={user.email || ''} readOnly className="bg-muted text-muted-foreground cursor-not-allowed" />
+                <p className="text-[10px] text-muted-foreground">Email is tied to your account and cannot be changed.</p>
             </div>
              <div className="grid gap-2">
-                <Label htmlFor="phone">Profile Phone Number (For WhatsApp/Calls)</Label>
+                <Label htmlFor="phone">Profile Phone Number (Direct Contact)</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -142,11 +155,11 @@ export default function ProfilePage() {
                     required
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground font-medium text-primary">This number will be displayed on your listings for guests to contact you directly.</p>
+                <p className="text-[10px] text-primary font-medium">This number will be visible on your listings for guests to contact you via WhatsApp or phone.</p>
             </div>
              <Button type="submit" className="w-full sm:w-auto rounded-full px-8 mt-4" disabled={isUpdating}>
                 {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Update Profile
+                Save Profile
              </Button>
         </form>
       </CardContent>
