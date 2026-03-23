@@ -203,10 +203,13 @@ export default function SubmitPropertyPage() {
       const submissionDate = new Date().toISOString();
       const propertyId = doc(collection(db, 'public_properties')).id;
       
+      // Ensure we have a phone number. Fallback to user phone if profile isn't ready.
+      const ownerPhone = profile?.phoneNumber || user.phoneNumber || '';
+
       const propertyData = {
         id: propertyId,
         ownerId: user.uid,
-        ownerPhoneNumber: profile?.phoneNumber || user.phoneNumber || '',
+        ownerPhoneNumber: ownerPhone,
         title: values.name,
         name: values.name,
         type: values.type,
