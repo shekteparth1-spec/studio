@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -65,7 +65,7 @@ const formSchema = z.object({
   pricePerNight: z.coerce.number().min(10, 'Price must be at least 10 INR.'),
   bedrooms: z.coerce.number().min(1, 'Must have at least 1 bedroom.'),
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
-  description: z.string().min(50, 'Description must be at least 50 characters.'),
+  description: z.string().min(20, 'Description must be at least 20 characters.'),
   amenities: z.array(z.string()),
   photos: z.array(z.string()),
 });
@@ -87,7 +87,7 @@ export default function SubmitPropertyPage() {
       name: '',
       type: 'farmhouse',
       location: '',
-      pricePerNight: 100,
+      pricePerNight: 1000,
       bedrooms: 1,
       squareFeet: 500,
       description: '',
@@ -168,29 +168,36 @@ export default function SubmitPropertyPage() {
 
     setIsSubmitting(true);
     try {
+      const submissionDate = new Date().toISOString();
       const propertyData = {
         ownerId: user.uid,
         title: values.name,
+        name: values.name,
         type: values.type,
         location: values.location,
-        city: values.location.split(',')[0].trim(),
+        city: values.location.split(',')[0].trim() || 'Unknown',
         stateProvince: values.location.split(',')[1]?.trim() || '',
-        zipPostalCode: '422001', // Satisfying schema requirements
+        zipPostalCode: '422001',
+        country: 'India',
         pricePerNight: values.pricePerNight,
         numberOfBedrooms: values.bedrooms,
+        bedrooms: values.bedrooms,
         squareFootage: values.squareFeet,
+        squareFeet: values.squareFeet,
         description: values.description,
         amenityIds: values.amenities,
+        amenities: values.amenities,
         photoUrls: values.photos,
+        imageUrls: values.photos,
         listingStatus: 'Approved',
-        submissionDate: new Date().toISOString(),
+        submissionDate: submissionDate,
         aiScore: 85,
         addressLine1: values.location,
-        country: 'India',
         latitude: 19.9975,
         longitude: 73.7898,
         numberOfBathrooms: 1,
         maxGuests: 4,
+        rating: 5.0,
       };
 
       // Create properties in the user's subcollection
@@ -205,7 +212,7 @@ export default function SubmitPropertyPage() {
 
       toast({
         title: 'Property Submitted!',
-        description: `Your property is now live and visible to everyone.`,
+        description: `Your property "${values.name}" is now live.`,
       });
       
       router.push('/dashboard');
@@ -215,7 +222,7 @@ export default function SubmitPropertyPage() {
       toast({
           variant: "destructive",
           title: 'Submission Failed',
-          description: 'There was an error submitting your property. Please try again.',
+          description: 'Could not submit your property. Please check your internet and try again.',
       });
     } finally {
       setIsSubmitting(false);
