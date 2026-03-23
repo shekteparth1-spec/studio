@@ -68,7 +68,7 @@ const formSchema = z.object({
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
   description: z.string().min(50, 'Description must be at least 50 characters.'),
   amenities: z.array(z.string()),
-  photos: z.array(z.string()).max(2, 'Maximum 2 photos allowed.'),
+  photos: z.array(z.string()).max(8, 'Maximum 8 photos allowed.'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -150,23 +150,23 @@ export default function EditPropertyPage() {
 
     const currentPhotos = form.getValues('photos') || [];
     
-    if (currentPhotos.length >= 2) {
+    if (currentPhotos.length >= 8) {
       toast({
         variant: "destructive",
         title: "Photo limit reached",
-        description: "You can only upload up to 2 photos for this prototype.",
+        description: "You can only upload up to 8 photos.",
       });
       return;
     }
 
-    const newFiles = Array.from(files).slice(0, 2 - currentPhotos.length);
+    const newFiles = Array.from(files).slice(0, 8 - currentPhotos.length);
 
     const filePromises = newFiles.map(file => {
-      if (file.size > 300 * 1024) {
+      if (file.size > 3 * 1024 * 1024) {
         toast({
           variant: "destructive",
           title: "File too large",
-          description: `${file.name} is larger than 300KB.`,
+          description: `${file.name} is larger than 3MB.`,
         });
         return null;
       }
@@ -238,7 +238,7 @@ export default function EditPropertyPage() {
       toast({
           variant: "destructive",
           title: 'Update Failed',
-          description: error.message || 'There was an error updating your property. Check image sizes.',
+          description: error.message || 'There was an error updating your property. Check if total image size exceeds 1MB.',
       });
     } finally {
       setIsSubmitting(false);
@@ -259,7 +259,7 @@ export default function EditPropertyPage() {
         <CardHeader>
           <CardTitle className="font-headline">Edit Property: {property?.title || property?.name}</CardTitle>
           <CardDescription>
-            Update your property information below. Max 2 photos, 300KB each.
+            Update your property information below. Max 8 photos, 3MB each.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -445,7 +445,7 @@ export default function EditPropertyPage() {
                 name="photos"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Photos (Max 2, 300KB each)</FormLabel>
+                    <FormLabel>Photos (Max 8, 3MB each)</FormLabel>
                     <FormControl>
                       <div>
                         <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10">
@@ -470,11 +470,11 @@ export default function EditPropertyPage() {
                               </label>
                               <p className="pl-1">or drag and drop</p>
                             </div>
-                            <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 300KB</p>
+                            <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 3MB</p>
                           </div>
                         </div>
                         {imagePreviews.length > 0 && (
-                          <div className="mt-4 grid grid-cols-2 gap-4">
+                          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
                             {imagePreviews.map((src, index) => (
                               <div key={index} className="group relative aspect-video">
                                 <Image

@@ -67,7 +67,7 @@ const formSchema = z.object({
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
   description: z.string().min(20, 'Description must be at least 20 characters.'),
   amenities: z.array(z.string()),
-  photos: z.array(z.string()).max(2, 'Maximum 2 photos allowed in prototype.'),
+  photos: z.array(z.string()).max(8, 'Maximum 8 photos allowed.'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -124,24 +124,24 @@ export default function SubmitPropertyPage() {
 
     const currentPhotos = form.getValues('photos') || [];
     
-    if (currentPhotos.length >= 2) {
+    if (currentPhotos.length >= 8) {
       toast({
         variant: "destructive",
         title: "Photo limit reached",
-        description: "You can only upload up to 2 photos for this prototype to save space.",
+        description: "You can only upload up to 8 photos.",
       });
       return;
     }
 
-    const newFiles = Array.from(files).slice(0, 2 - currentPhotos.length);
+    const newFiles = Array.from(files).slice(0, 8 - currentPhotos.length);
 
     const filePromises = newFiles.map(file => {
-      // 300KB limit to prevent Firestore 1MB document limit error
-      if (file.size > 300 * 1024) {
+      // 3MB limit as requested
+      if (file.size > 3 * 1024 * 1024) {
         toast({
           variant: "destructive",
           title: "File too large",
-          description: `${file.name} is larger than 300KB. Please use smaller images.`,
+          description: `${file.name} is larger than 3MB.`,
         });
         return null;
       }
@@ -200,7 +200,7 @@ export default function SubmitPropertyPage() {
         squareFootage: values.squareFeet,
         description: values.description,
         amenityIds: values.amenities,
-        photoUrls: values.photos, // Only store once to save document space
+        photoUrls: values.photos,
         listingStatus: 'Approved',
         submissionDate: submissionDate,
         aiScore: 85,
@@ -232,7 +232,7 @@ export default function SubmitPropertyPage() {
       toast({
           variant: "destructive",
           title: 'Submission Failed',
-          description: error.message || 'Could not submit your property. Please check image sizes.',
+          description: error.message || 'Could not submit your property. Check if the combined photo size is too large (max 1MB total per listing).',
       });
     } finally {
       setIsSubmitting(false);
@@ -245,7 +245,7 @@ export default function SubmitPropertyPage() {
         <CardTitle className="font-headline text-2xl">Submit a Property</CardTitle>
         <CardDescription>
           Fill out the details below to list your property on Harvest Haven. 
-          <span className="block mt-1 text-xs text-muted-foreground">Note: Maximum 2 photos, each under 300KB.</span>
+          <span className="block mt-1 text-xs text-muted-foreground">Note: Maximum 8 photos, each under 3MB. Total listing size must stay under 1MB.</span>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -432,7 +432,7 @@ export default function SubmitPropertyPage() {
               name="photos"
               render={() => (
                 <FormItem>
-                  <FormLabel className="font-bold">Photos (Max 2, 300KB each)</FormLabel>
+                  <FormLabel className="font-bold">Photos (Max 8, 3MB each)</FormLabel>
                   <FormControl>
                     <div>
                       <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10 hover:bg-muted/30 transition-colors">
@@ -457,11 +457,11 @@ export default function SubmitPropertyPage() {
                             </label>
                             <p className="pl-1">or drag and drop</p>
                           </div>
-                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 300KB</p>
+                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 3MB</p>
                         </div>
                       </div>
                       {imagePreviews.length > 0 && (
-                        <div className="mt-4 grid grid-cols-2 gap-4">
+                        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
                           {imagePreviews.map((src, index) => (
                             <div key={index} className="group relative aspect-video">
                               <Image
