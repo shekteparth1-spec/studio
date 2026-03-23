@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { Loader2, Phone } from 'lucide-react';
+import { Loader2, Phone, CheckCircle2 } from 'lucide-react';
 
 export default function ProfilePage() {
   const { toast } = useToast();
@@ -60,7 +60,7 @@ export default function ProfilePage() {
       toast({
         variant: "destructive",
         title: "Phone Number Required",
-        description: "Please enter a valid phone number so guests can contact you.",
+        description: "Please enter a valid phone number (at least 10 digits) so guests can contact you.",
       });
       return;
     }
@@ -69,8 +69,6 @@ export default function ProfilePage() {
     try {
       const docRef = doc(db, 'users', user.uid);
       
-      // Using setDoc with merge: true is more robust than updateDoc
-      // because it handles cases where the document might not exist yet.
       await setDoc(docRef, {
         id: user.uid,
         firstName: firstName.trim(),
@@ -100,15 +98,21 @@ export default function ProfilePage() {
     <Card className="border-none shadow-md">
       <CardHeader>
         <CardTitle className="font-headline text-2xl text-primary">My Profile</CardTitle>
-        <CardDescription>View and manage your account information and contact details.</CardDescription>
+        <CardDescription>View and manage your account information and contact details for property listings.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col gap-1 pb-4 border-b">
           <h2 className="text-3xl font-bold">{firstName} {lastName}</h2>
           <p className="text-muted-foreground">{user.email}</p>
           <div className="flex gap-2 mt-2">
-            <Badge variant="outline" className="capitalize">{profile?.role || 'User'}</Badge>
-            {phone && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none">Contact Active</Badge>}
+            <Badge variant="outline" className="capitalize">{profile?.role || 'Owner'}</Badge>
+            {phone ? (
+              <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Contact Active
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="bg-destructive/10 text-destructive border-none">Phone Required</Badge>
+            )}
           </div>
         </div>
         
@@ -141,7 +145,7 @@ export default function ProfilePage() {
                 <p className="text-[10px] text-muted-foreground">Email is tied to your account and cannot be changed.</p>
             </div>
              <div className="grid gap-2">
-                <Label htmlFor="phone">Profile Phone Number (Direct Contact)</Label>
+                <Label htmlFor="phone">Profile Phone Number (WhatsApp & Direct Call)</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -150,16 +154,16 @@ export default function ProfilePage() {
                     className="pl-10"
                     value={phone} 
                     onChange={(e) => setPhone(e.target.value)} 
-                    placeholder="+91 9876543210"
+                    placeholder="e.g., 919876543210 (include country code)"
                     disabled={isUpdating}
                     required
                   />
                 </div>
-                <p className="text-[10px] text-primary font-medium">This number will be visible on your listings for guests to contact you via WhatsApp or phone.</p>
+                <p className="text-[10px] text-primary font-medium">This number will be used for guests to contact you via WhatsApp and phone calls on all your listings.</p>
             </div>
              <Button type="submit" className="w-full sm:w-auto rounded-full px-8 mt-4" disabled={isUpdating}>
                 {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Save Profile
+                Save Profile Details
              </Button>
         </form>
       </CardContent>

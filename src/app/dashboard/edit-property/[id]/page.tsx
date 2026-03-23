@@ -25,7 +25,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -67,7 +67,7 @@ const formSchema = z.object({
   pricePerNight: z.coerce.number().min(10, 'Price must be at least 10 INR.'),
   bedrooms: z.coerce.number().min(1, 'Must have at least 1 bedroom.'),
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
-  description: z.string().min(50, 'Description must be at least 50 characters.'),
+  description: z.string().min(20, 'Description must be at least 20 characters.'),
   amenities: z.array(z.string()),
   photos: z.array(z.string()).max(8, 'Maximum 8 photos allowed.'),
 });
@@ -115,13 +115,13 @@ export default function EditPropertyPage() {
   useEffect(() => {
     if (property) {
       form.reset({
-        name: property.title || property.name,
-        type: property.type,
-        location: property.location,
-        pricePerNight: property.pricePerNight,
-        bedrooms: property.numberOfBedrooms || property.bedrooms,
-        squareFeet: property.squareFootage || property.squareFeet,
-        description: property.description,
+        name: property.title || property.name || '',
+        type: property.type as 'farmhouse' | 'resort' || 'farmhouse',
+        location: property.location || '',
+        pricePerNight: property.pricePerNight || 0,
+        bedrooms: property.numberOfBedrooms || property.bedrooms || 1,
+        squareFeet: property.squareFootage || property.squareFeet || 500,
+        description: property.description || '',
         amenities: property.amenityIds || property.amenities || [],
         photos: property.photoUrls || property.imageUrls || [],
       });
@@ -156,28 +156,17 @@ export default function EditPropertyPage() {
     if (!files || files.length === 0) return;
 
     const currentPhotos = form.getValues('photos') || [];
-    
     if (currentPhotos.length >= 8) {
-      toast({
-        variant: "destructive",
-        title: "Photo limit reached",
-        description: "You can only upload up to 8 photos.",
-      });
+      toast({ variant: "destructive", title: "Photo limit reached", description: "You can only upload up to 8 photos." });
       return;
     }
 
     const newFiles = Array.from(files).slice(0, 8 - currentPhotos.length);
-
     const filePromises = newFiles.map(file => {
       if (file.size > 3 * 1024 * 1024) {
-        toast({
-          variant: "destructive",
-          title: "File too large",
-          description: `${file.name} is larger than 3MB.`,
-        });
+        toast({ variant: "destructive", title: "File too large", description: `${file.name} is larger than 3MB.` });
         return null;
       }
-
       return new Promise<string | null>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -189,12 +178,10 @@ export default function EditPropertyPage() {
     Promise.all(filePromises).then(results => {
       const validResults = results.filter((r): r is string => r !== null);
       if (validResults.length === 0) return;
-      
       const allPhotos = [...currentPhotos, ...validResults];
       form.setValue('photos', allPhotos, { shouldValidate: true });
       setImagePreviews(allPhotos);
     });
-
     e.target.value = '';
   };
 
@@ -207,13 +194,13 @@ export default function EditPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!property || !user || !db) return;
 
-    // Critical check for owner phone number from profile
+    // CRITICAL: Standardized contact info pull from profile
     const ownerPhone = profile?.phoneNumber || '';
     if (!ownerPhone) {
       toast({
         variant: "destructive",
-        title: "Phone Number Required",
-        description: "Please update your phone number in your profile so guests can contact you.",
+        title: "Profile Phone Number Required",
+        description: "Please update your profile phone number so guests can contact you via WhatsApp.",
       });
       router.push('/dashboard/profile');
       return;
@@ -224,7 +211,7 @@ export default function EditPropertyPage() {
       toast({
         variant: "destructive",
         title: "Photos too large",
-        description: "The combined size of your photos exceeds the database limit. Please use fewer photos or smaller images.",
+        description: "Total size of all photos combined must be under 1MB. Use smaller images.",
       });
       return;
     }
@@ -232,6 +219,9 @@ export default function EditPropertyPage() {
     setIsSubmitting(true);
     try {
       const updatedData = {
+        id: property.id,
+        ownerId: user.uid,
+        ownerPhoneNumber: ownerPhone, // Ensuring latest profile phone is attached
         title: values.name,
         name: values.name,
         type: values.type,
@@ -243,22 +233,20 @@ export default function EditPropertyPage() {
         description: values.description,
         amenityIds: values.amenities,
         photoUrls: values.photos,
-        ownerPhoneNumber: ownerPhone, // Ensuring profile phone is attached
+        listingStatus: 'Approved',
       };
 
+      // Update in user collection
       const userDocRef = doc(db, 'users', user.uid, 'properties', property.id);
-      await updateDoc(userDocRef, updatedData);
+      await setDoc(userDocRef, updatedData, { merge: true });
 
+      // Update in public collection
       const publicDocRef = doc(db, 'public_properties', property.id);
-      await setDoc(publicDocRef, {
-        ...property,
-        ...updatedData,
-        id: property.id
-      }, { merge: true });
+      await setDoc(publicDocRef, updatedData, { merge: true });
 
       toast({
         title: 'Property Updated',
-        description: 'Your property details and contact number have been successfully updated.',
+        description: 'Your stay details and contact information have been successfully updated.',
       });
       
       router.push('/dashboard');
@@ -266,20 +254,16 @@ export default function EditPropertyPage() {
       console.error("Update failed:", error);
       let errorMessage = 'There was an error updating your property.';
       if (error.message?.includes('longer than 1048487 bytes')) {
-        errorMessage = 'Your listing is too large. Please use smaller photos (under 100KB each is best).';
+        errorMessage = 'Your listing is too large. Use fewer/smaller photos.';
       }
-      toast({
-          variant: "destructive",
-          title: 'Update Failed',
-          description: errorMessage,
-      });
+      toast({ variant: "destructive", title: 'Update Failed', description: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[50vh]">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-[50vh]"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
@@ -292,7 +276,7 @@ export default function EditPropertyPage() {
         <CardHeader>
           <CardTitle className="font-headline">Edit Property: {property?.title || property?.name}</CardTitle>
           <CardDescription>
-            Update your property information below. Max 8 photos, total size under 1MB.
+            Update your property details. Ensure your profile phone number is correct for guest contact.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -405,20 +389,12 @@ export default function EditPropertyPage() {
                         onClick={handleGenerateDescription}
                         disabled={isAiLoading || isSubmitting}
                       >
-                        {isAiLoading ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="mr-2 h-4 w-4" />
-                        )}
+                        {isAiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                         Generate with AI
                       </Button>
                     </div>
                     <FormControl>
-                      <Textarea
-                        placeholder="Describe your property in detail..."
-                        className="min-h-[150px]"
-                        {...field}
-                      />
+                      <Textarea placeholder="Describe your property..." className="min-h-[150px]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -431,42 +407,31 @@ export default function EditPropertyPage() {
                 render={() => (
                   <FormItem>
                     <div className="mb-4">
-                      <FormLabel className="text-base">Amenities</FormLabel>
+                      <FormLabel className="text-base font-bold">Amenities</FormLabel>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {amenitiesList.map((item) => (
-                      <FormField
-                        key={item.id}
-                        control={form.control}
-                        name="amenities"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={item.id}
-                              className="flex flex-row items-start space-x-3 space-y-0"
-                            >
+                      {amenitiesList.map((item) => (
+                        <FormField
+                          key={item.id}
+                          control={form.control}
+                          name="amenities"
+                          render={({ field }) => (
+                            <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
                               <FormControl>
                                 <Checkbox
                                   checked={field.value?.includes(item.id)}
                                   onCheckedChange={(checked) => {
                                     return checked
                                       ? field.onChange([...field.value, item.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== item.id
-                                          )
-                                        )
+                                      : field.onChange(field.value?.filter((value) => value !== item.id))
                                   }}
                                 />
                               </FormControl>
-                              <FormLabel className="font-normal">
-                                {item.label}
-                              </FormLabel>
+                              <FormLabel className="font-normal cursor-pointer">{item.label}</FormLabel>
                             </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
+                          )}
+                        />
+                      ))}
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -478,60 +443,36 @@ export default function EditPropertyPage() {
                 name="photos"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Photos (Max 8, 3MB each)</FormLabel>
+                    <FormLabel className="font-bold">Photos (Max 8)</FormLabel>
                     <Alert variant="default" className="bg-muted/50 border-none mb-4">
                       <AlertCircle className="h-4 w-4" />
                       <AlertTitle className="text-xs font-bold uppercase tracking-wider">Storage Limit</AlertTitle>
                       <AlertDescription className="text-xs">
-                        The total size of all photos combined must be under **1MB**. For best results, use compressed images (under 100KB each).
+                        Due to database limits, total size of all photos combined must be under **1MB**. Compressed images are recommended.
                       </AlertDescription>
                     </Alert>
                     <FormControl>
                       <div>
-                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10">
+                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10 hover:bg-muted/30 transition-colors">
                           <div className="text-center">
                             <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                             <div className="mt-4 flex text-sm leading-6 text-muted-foreground">
-                              <label
-                                htmlFor="file-upload"
-                                className="relative cursor-pointer rounded-md font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 hover:text-primary/80"
-                              >
+                              <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-semibold text-primary hover:text-primary/80">
                                 <span>Upload files</span>
-                                <input
-                                  id="file-upload"
-                                  name="file-upload"
-                                  type="file"
-                                  className="sr-only"
-                                  multiple
-                                  accept="image/*"
-                                  onChange={handleFileChange}
-                                  disabled={isSubmitting}
-                                />
+                                <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple accept="image/*" onChange={handleFileChange} disabled={isSubmitting} />
                               </label>
                               <p className="pl-1">or drag and drop</p>
                             </div>
-                            <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 3MB</p>
+                            <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 3MB each</p>
                           </div>
                         </div>
                         {imagePreviews.length > 0 && (
                           <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
                             {imagePreviews.map((src, index) => (
                               <div key={index} className="group relative aspect-video">
-                                <Image
-                                  src={src}
-                                  alt={`Preview ${index + 1}`}
-                                  fill
-                                  className="rounded-md object-cover"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="icon"
-                                  className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                                  onClick={() => handleRemoveImage(index)}
-                                >
-                                  <X className="h-4 w-4" />
-                                  <span className="sr-only">Remove image</span>
+                                <Image src={src} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
+                                <Button type="button" variant="destructive" size="icon" className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100" onClick={() => handleRemoveImage(index)}>
+                                  <X className="h-4 w-4" /><span className="sr-only">Remove image</span>
                                 </Button>
                               </div>
                             ))}
@@ -544,7 +485,7 @@ export default function EditPropertyPage() {
                 )}
               />
 
-              <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting || isAiLoading}>
+              <Button type="submit" size="lg" className="w-full sm:w-auto rounded-full" disabled={isSubmitting || isAiLoading}>
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Update Property
               </Button>

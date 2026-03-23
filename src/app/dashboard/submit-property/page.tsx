@@ -168,13 +168,13 @@ export default function SubmitPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!user || !db) return;
 
-    // Critical check for profile phone number
+    // CRITICAL: Pull phone number from user profile
     const ownerPhone = profile?.phoneNumber || '';
     if (!ownerPhone) {
       toast({
         variant: "destructive",
         title: "Profile Phone Number Required",
-        description: "Please add your phone number to your profile before listing a property so guests can contact you.",
+        description: "Please add your phone number to your profile before listing a property so guests can contact you via WhatsApp.",
       });
       router.push('/dashboard/profile');
       return;
@@ -198,7 +198,7 @@ export default function SubmitPropertyPage() {
       const propertyData = {
         id: propertyId,
         ownerId: user.uid,
-        ownerPhoneNumber: ownerPhone,
+        ownerPhoneNumber: ownerPhone, // Standardized field for contact
         title: values.name,
         name: values.name,
         type: values.type,
@@ -221,13 +221,13 @@ export default function SubmitPropertyPage() {
       const userDocRef = doc(db, 'users', user.uid, 'properties', propertyId);
       await setDoc(userDocRef, propertyData);
 
-      // Save to public properties
+      // Save to public properties for search
       const publicDocRef = doc(db, 'public_properties', propertyId);
       await setDoc(publicDocRef, propertyData);
 
       toast({
         title: 'Property Submitted!',
-        description: `Your property "${values.name}" is now live with your profile phone number attached.`,
+        description: `Your stay "${values.name}" is now live with your contact details attached.`,
       });
       
       router.push('/dashboard');
@@ -248,7 +248,7 @@ export default function SubmitPropertyPage() {
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Submit a Property</CardTitle>
         <CardDescription>
-          Fill out the details below to list your property. Your profile phone number will be used for guest contact.
+          Fill out the details below. Your profile phone number will be used for guest contact via WhatsApp.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -421,7 +421,7 @@ export default function SubmitPropertyPage() {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle className="text-xs font-bold uppercase tracking-wider">Storage Limit</AlertTitle>
                     <AlertDescription className="text-xs">
-                      The total size of all photos combined must be under **1MB**. For best results, use compressed images (under 100KB each).
+                      Due to database limits, the total size of all photos combined must be under **1MB**. Compressed images (under 100KB each) are highly recommended.
                     </AlertDescription>
                   </Alert>
                   <FormControl>

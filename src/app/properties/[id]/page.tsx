@@ -77,17 +77,12 @@ export default function PropertyDetailsPage() {
 
   const { data: property, isLoading } = useDoc(propertyDocRef);
 
-  const isFetching = isLoading || !params?.id;
-
-  if (isFetching) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1 bg-background flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground animate-pulse">Loading stay details...</p>
-          </div>
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </main>
         <Footer />
       </div>
@@ -112,7 +107,7 @@ export default function PropertyDetailsPage() {
   const description = property.description || 'No description provided.';
   const amenities = property.amenityIds || property.amenities || [];
   
-  // Use ownerPhoneNumber directly from property document (standardized in backend.json)
+  // ownerPhoneNumber is standard across submission and profile
   const ownerPhone = property.ownerPhoneNumber || '';
 
   const handleWhatsApp = () => {
@@ -124,6 +119,7 @@ export default function PropertyDetailsPage() {
       });
       return;
     }
+    // Clean phone number for WhatsApp URL
     const cleanPhone = ownerPhone.replace(/\D/g, '');
     const message = encodeURIComponent(`Hi, I'm interested in booking your stay: ${title} on Harvest Haven.`);
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
@@ -153,27 +149,21 @@ export default function PropertyDetailsPage() {
               </Badge>
               {ownerPhone && (
                 <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none text-[10px] font-bold uppercase">
-                  Contact Available
+                  Contact Active
                 </Badge>
               )}
             </div>
             <h1 className="font-headline text-4xl font-bold md:text-5xl">{title}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground">
               {property.rating && (
-                <>
-                  <div className="flex items-center gap-1">
-                    <Star size={18} className="text-primary fill-primary" />
-                    <span className="font-bold text-foreground">
-                      {property.rating}
-                    </span>
-                    <span className="text-sm">(Verified Reviews)</span>
-                  </div>
-                  <span className="hidden sm:inline">·</span>
-                </>
+                <div className="flex items-center gap-1">
+                  <Star size={18} className="text-primary fill-primary" />
+                  <span className="font-bold text-foreground">{property.rating}</span>
+                </div>
               )}
               <div className="flex items-center gap-2">
                 <MapPin size={18} className="text-primary" />
-                <span className="font-medium">{location}, {property.stateProvince || property.country || 'India'}</span>
+                <span className="font-medium">{location}</span>
               </div>
             </div>
           </div>
@@ -198,12 +188,7 @@ export default function PropertyDetailsPage() {
                 ) : (
                    <CarouselItem>
                       <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl bg-muted/50 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-muted">
-                        <Image
-                          src={`https://picsum.photos/seed/${property.id}/1200/600`}
-                          alt="Placeholder"
-                          fill
-                          className="object-cover opacity-40 grayscale"
-                        />
+                        <Image src={`https://picsum.photos/seed/${property.id}/1200/600`} alt="Placeholder" fill className="object-cover opacity-40 grayscale" />
                         <div className="relative z-10 text-center p-6 bg-background/80 backdrop-blur-sm rounded-lg">
                           <p className="font-medium">Experience the beauty of {title}</p>
                         </div>
@@ -223,9 +208,7 @@ export default function PropertyDetailsPage() {
           <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-8">
               <div>
-                <h2 className="font-headline text-3xl font-semibold capitalize mb-4">
-                   Stay Details
-                </h2>
+                <h2 className="font-headline text-3xl font-semibold capitalize mb-4">Stay Details</h2>
                 <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
                   <div className="flex items-center gap-2.5">
                     <BedDouble size={22} className="text-primary" />
@@ -236,14 +219,6 @@ export default function PropertyDetailsPage() {
                     <Home size={22} className="text-primary" />
                     <span className="font-medium text-foreground">{squareFeet} Sq Ft</span>
                   </div>
-                  {property.maxGuests && (
-                    <>
-                      <Separator orientation="vertical" className="h-4" />
-                      <div className="flex items-center gap-2.5 text-foreground">
-                        <span className="font-medium">Up to {property.maxGuests} Guests</span>
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
 
@@ -319,7 +294,7 @@ export default function PropertyDetailsPage() {
                     </Button>
                     
                     <p className="text-center text-xs text-muted-foreground mt-4 italic">
-                      Direct contact with the owner via their profile phone number.
+                      Direct contact via verified profile phone number.
                     </p>
                   </div>
                 </CardContent>

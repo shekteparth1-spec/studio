@@ -46,8 +46,8 @@ export type User = {
 };
 
 export const users: User[] = [
-  { id: 'user-1', name: 'John Doe', email: 'john@example.com', role: 'user', password: 'password123', phone: '919876543210', phoneNumber: '919876543210' },
-  { id: 'user-2', name: 'Jane Smith', email: 'jane@example.com', role: 'user', password: 'password456', phone: '919876543211', phoneNumber: '919876543211' },
+  { id: 'user-1', name: 'John Doe', email: 'john@example.com', role: 'user', password: 'password123', phoneNumber: '919876543210' },
+  { id: 'user-2', name: 'Jane Smith', email: 'jane@example.com', role: 'user', password: 'password456', phoneNumber: '919876543211' },
 ];
 
 export const properties: Property[] = [
