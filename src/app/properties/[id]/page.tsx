@@ -17,7 +17,6 @@ import {
   Dumbbell,
   Waves,
   Map,
-  Phone,
   Tv,
   WashingMachine,
   Sunset,
@@ -27,8 +26,6 @@ import {
   Laptop,
   MessageCircle,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -79,18 +76,25 @@ export default function PropertyDetailsPage() {
 
   const { data: property, isLoading } = useDoc(propertyDocRef);
 
-  if (isLoading) {
+  // If we're still waiting for params OR the database hook to start/finish
+  const isFetching = isLoading || !params?.id;
+
+  if (isFetching) {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1 bg-background flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground animate-pulse">Loading stay details...</p>
+          </div>
         </main>
         <Footer />
       </div>
     );
   }
 
+  // Only call notFound() if we are definitely finished loading and have no data
   if (!property) {
     notFound();
   }

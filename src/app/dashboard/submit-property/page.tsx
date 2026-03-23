@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const amenitiesList = [
@@ -137,7 +137,6 @@ export default function SubmitPropertyPage() {
     const newFiles = Array.from(files).slice(0, 8 - currentPhotos.length);
 
     const filePromises = newFiles.map(file => {
-      // 3MB individual file limit
       if (file.size > 3 * 1024 * 1024) {
         toast({
           variant: "destructive",
@@ -183,9 +182,7 @@ export default function SubmitPropertyPage() {
       return;
     }
 
-    // Calculate total size of photos array to prevent Firestore 1MB document limit error
     const totalSize = values.photos.reduce((acc, p) => acc + p.length, 0);
-    // Firestore limit is 1MB. Base64 strings are larger. We aim for ~800KB total to be safe.
     if (totalSize > 800000) {
       toast({
         variant: "destructive",
@@ -198,14 +195,17 @@ export default function SubmitPropertyPage() {
     setIsSubmitting(true);
     try {
       const submissionDate = new Date().toISOString();
+      const propertyId = doc(collection(db, 'public_properties')).id;
+      
       const propertyData = {
+        id: propertyId,
         ownerId: user.uid,
         title: values.name,
         name: values.name,
         type: values.type,
         location: values.location,
         city: values.location.split(',')[0].trim() || 'Unknown',
-        stateProvince: values.location.split(',')[1]?.trim() || '',
+        stateProvince: values.location.split(',')[1]?.trim() || 'India',
         zipPostalCode: '422001',
         country: 'India',
         pricePerNight: values.pricePerNight,
@@ -225,13 +225,13 @@ export default function SubmitPropertyPage() {
         rating: 5.0,
       };
 
-      const userPropertiesRef = collection(db, 'users', user.uid, 'properties');
-      const docRef = await addDoc(userPropertiesRef, propertyData);
+      // Save to owner's subcollection
+      const userDocRef = doc(db, 'users', user.uid, 'properties', propertyId);
+      await setDoc(userDocRef, propertyData);
 
-      await setDoc(doc(db, 'public_properties', docRef.id), {
-        ...propertyData,
-        id: docRef.id
-      });
+      // Save to public collection
+      const publicDocRef = doc(db, 'public_properties', propertyId);
+      await setDoc(publicDocRef, propertyData);
 
       toast({
         title: 'Property Submitted!',
@@ -242,7 +242,7 @@ export default function SubmitPropertyPage() {
 
     } catch (error: any) {
       console.error("Submission failed:", error);
-      let errorMessage = 'Could not submit your property.';
+      let errorMessage = error.message || 'Could not submit your property.';
       if (error.message?.includes('longer than 1048487 bytes')) {
         errorMessage = 'Your listing is too large. Please use smaller photos (under 100KB each is best).';
       }
