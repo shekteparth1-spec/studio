@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Menu, Plus } from 'lucide-react';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
@@ -23,6 +23,7 @@ import { useUser, useAuth } from '@/firebase';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/properties', label: 'Explore All Stays' },
+  { href: '/dashboard/submit-property', label: 'Submit Property' },
 ];
 
 export default function Header() {
@@ -70,7 +71,7 @@ export default function Header() {
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
-                      href={link.href}
+                      href={user || link.href !== '/dashboard/submit-property' ? link.href : '/login'}
                       className="text-lg font-medium text-foreground/80 transition-colors hover:text-foreground"
                     >
                       {link.label}
@@ -84,7 +85,7 @@ export default function Header() {
           {navLinks.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={user || link.href !== '/dashboard/submit-property' ? link.href : '/login'}
               className="font-medium text-foreground/60 transition-colors hover:text-foreground/80"
             >
               {link.label}
@@ -116,8 +117,11 @@ export default function Header() {
                   </Button>
                 </>
               )}
-               <Button variant="outline" asChild>
-                <Link href={user ? "/dashboard/submit-property" : "/login"}>List your stay</Link>
+               <Button variant="outline" asChild className="hidden sm:flex items-center gap-2">
+                <Link href={user ? "/dashboard/submit-property" : "/login"}>
+                   <Plus className="h-4 w-4" />
+                   List your stay
+                </Link>
               </Button>
             </>
           )}
