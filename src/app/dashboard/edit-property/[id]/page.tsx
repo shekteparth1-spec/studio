@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Sparkles, Loader2, Upload, X, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X, ArrowLeft, AlertCircle, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -25,7 +25,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/select';
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -35,6 +35,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -64,6 +65,7 @@ const formSchema = z.object({
   name: z.string().min(5, 'Property name must be at least 5 characters.'),
   type: z.enum(['farmhouse', 'resort']),
   location: z.string().min(3, 'Location is required.'),
+  contactNumber: z.string().min(10, 'Please enter a valid contact number.'),
   pricePerNight: z.coerce.number().min(10, 'Price must be at least 10 INR.'),
   bedrooms: z.coerce.number().min(1, 'Must have at least 1 bedroom.'),
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
@@ -103,6 +105,7 @@ export default function EditPropertyPage() {
       name: '',
       type: 'farmhouse',
       location: '',
+      contactNumber: '',
       pricePerNight: 100,
       bedrooms: 1,
       squareFeet: 500,
@@ -118,6 +121,7 @@ export default function EditPropertyPage() {
         name: property.title || property.name || '',
         type: property.type as 'farmhouse' | 'resort' || 'farmhouse',
         location: property.location || '',
+        contactNumber: property.ownerPhoneNumber || profile?.phoneNumber || '',
         pricePerNight: property.pricePerNight || 0,
         bedrooms: property.numberOfBedrooms || property.bedrooms || 1,
         squareFeet: property.squareFootage || property.squareFeet || 500,
@@ -127,7 +131,7 @@ export default function EditPropertyPage() {
       });
       setImagePreviews(property.photoUrls || property.imageUrls || []);
     }
-  }, [property, form]);
+  }, [property, profile, form]);
 
   async function handleGenerateDescription() {
     setIsAiLoading(true);
@@ -194,18 +198,6 @@ export default function EditPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!property || !user || !db) return;
 
-    // CRITICAL: Standardized contact info pull from profile
-    const ownerPhone = profile?.phoneNumber || '';
-    if (!ownerPhone) {
-      toast({
-        variant: "destructive",
-        title: "Profile Phone Number Required",
-        description: "Please update your profile phone number so guests can contact you via WhatsApp.",
-      });
-      router.push('/dashboard/profile');
-      return;
-    }
-
     const totalSize = values.photos.reduce((acc, p) => acc + p.length, 0);
     if (totalSize > 800000) {
       toast({
@@ -221,7 +213,7 @@ export default function EditPropertyPage() {
       const updatedData = {
         id: property.id,
         ownerId: user.uid,
-        ownerPhoneNumber: ownerPhone, // Ensuring latest profile phone is attached
+        ownerPhoneNumber: values.contactNumber,
         title: values.name,
         name: values.name,
         type: values.type,
@@ -276,7 +268,7 @@ export default function EditPropertyPage() {
         <CardHeader>
           <CardTitle className="font-headline">Edit Property: {property?.title || property?.name}</CardTitle>
           <CardDescription>
-            Update your property details. Ensure your profile phone number is correct for guest contact.
+            Update your property details and contact information.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -319,19 +311,38 @@ export default function EditPropertyPage() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Lonavala, Maharashtra" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Lonavala, Maharashtra" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contactNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Number (WhatsApp & Calls)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="e.g., 919876543210" className="pl-10" {...field} />
+                        </div>
+                      </FormControl>
+                      <FormDescription>The number guests will use to reach you.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                 <FormField

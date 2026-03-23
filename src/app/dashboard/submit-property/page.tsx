@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Sparkles, Loader2, Upload, X, AlertCircle } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X, AlertCircle, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -35,6 +35,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -63,6 +64,7 @@ const formSchema = z.object({
   name: z.string().min(5, 'Property name must be at least 5 characters.'),
   type: z.enum(['farmhouse', 'resort']),
   location: z.string().min(3, 'Location is required.'),
+  contactNumber: z.string().min(10, 'Please enter a valid contact number.'),
   pricePerNight: z.coerce.number().min(10, 'Price must be at least 10 INR.'),
   bedrooms: z.coerce.number().min(1, 'Must have at least 1 bedroom.'),
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
@@ -94,6 +96,7 @@ export default function SubmitPropertyPage() {
       name: '',
       type: 'farmhouse',
       location: '',
+      contactNumber: '',
       pricePerNight: 1000,
       bedrooms: 1,
       squareFeet: 500,
@@ -102,6 +105,13 @@ export default function SubmitPropertyPage() {
       photos: [],
     },
   });
+
+  // Pre-fill contact number from profile when it loads
+  useEffect(() => {
+    if (profile?.phoneNumber && !form.getValues('contactNumber')) {
+      form.setValue('contactNumber', profile.phoneNumber);
+    }
+  }, [profile, form]);
 
   async function handleGenerateDescription() {
     setIsAiLoading(true);
@@ -168,18 +178,6 @@ export default function SubmitPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!user || !db) return;
 
-    // CRITICAL: Pull phone number from user profile
-    const ownerPhone = profile?.phoneNumber || '';
-    if (!ownerPhone) {
-      toast({
-        variant: "destructive",
-        title: "Profile Phone Number Required",
-        description: "Please add your phone number to your profile before listing a property so guests can contact you via WhatsApp.",
-      });
-      router.push('/dashboard/profile');
-      return;
-    }
-
     const totalSize = values.photos.reduce((acc, p) => acc + p.length, 0);
     if (totalSize > 800000) {
       toast({
@@ -198,7 +196,7 @@ export default function SubmitPropertyPage() {
       const propertyData = {
         id: propertyId,
         ownerId: user.uid,
-        ownerPhoneNumber: ownerPhone, // Standardized field for contact
+        ownerPhoneNumber: values.contactNumber, 
         title: values.name,
         name: values.name,
         type: values.type,
@@ -248,7 +246,7 @@ export default function SubmitPropertyPage() {
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Submit a Property</CardTitle>
         <CardDescription>
-          Fill out the details below. Your profile phone number will be used for guest contact via WhatsApp.
+          Fill out the details below. Provide a contact number for guest inquiries.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -291,19 +289,38 @@ export default function SubmitPropertyPage() {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Lonavala, Maharashtra" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Lonavala, Maharashtra" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="contactNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Number (WhatsApp & Calls)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="e.g., 919876543210" className="pl-10" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormDescription>This number will be visible to guests for bookings.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               <FormField
