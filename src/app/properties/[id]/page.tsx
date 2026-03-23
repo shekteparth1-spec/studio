@@ -27,6 +27,7 @@ import {
   MessageCircle,
   Loader2,
   Phone,
+  AlertCircle,
 } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -44,6 +45,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const amenityIcons: { [key: string]: React.ReactNode } = {
   wifi: <Wifi size={20} />,
@@ -283,10 +285,21 @@ export default function PropertyDetailsPage() {
                   </div>
                   
                   <div className="flex flex-col gap-4">
+                    {!ownerPhone && (
+                      <Alert variant="destructive" className="mb-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Contact Unavailable</AlertTitle>
+                        <AlertDescription className="text-xs">
+                          The owner has not provided a verified contact number.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
                     <Button 
                       size="lg"
                       className="w-full rounded-full py-7 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
                       onClick={handleWhatsApp}
+                      disabled={!ownerPhone}
                     >
                       <MessageCircle className="mr-2 h-6 w-6" />
                       WhatsApp Owner
@@ -297,6 +310,7 @@ export default function PropertyDetailsPage() {
                       variant="outline"
                       className="w-full rounded-full py-7 text-lg font-bold border-2 border-primary text-primary hover:bg-primary/5 transition-all"
                       onClick={handleCall}
+                      disabled={!ownerPhone}
                     >
                       <Phone className="mr-2 h-6 w-6" />
                       Call Owner

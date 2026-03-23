@@ -179,12 +179,17 @@ export default function SubmitPropertyPage() {
   };
 
   async function onFormSubmit(values: FormValues) {
-    if (!user || !db) {
+    if (!user || !db) return;
+
+    // Critical check for owner phone number
+    const ownerPhone = profile?.phoneNumber || '';
+    if (!ownerPhone) {
       toast({
-          variant: "destructive",
-          title: 'Error',
-          description: 'You must be logged in to submit a property.',
+        variant: "destructive",
+        title: "Phone Number Required",
+        description: "Please update your phone number in your profile before submitting a property so guests can contact you.",
       });
+      router.push('/dashboard/profile');
       return;
     }
 
@@ -202,9 +207,6 @@ export default function SubmitPropertyPage() {
     try {
       const submissionDate = new Date().toISOString();
       const propertyId = doc(collection(db, 'public_properties')).id;
-      
-      // Ensure we have a phone number. Fallback to user phone if profile isn't ready.
-      const ownerPhone = profile?.phoneNumber || user.phoneNumber || '';
 
       const propertyData = {
         id: propertyId,
@@ -250,7 +252,7 @@ export default function SubmitPropertyPage() {
 
     } catch (error: any) {
       console.error("Submission failed:", error);
-      let errorMessage = error.message || 'Could not submit your property.';
+      let errorMessage = 'Could not submit your property.';
       if (error.message?.includes('longer than 1048487 bytes')) {
         errorMessage = 'Your listing is too large. Please use smaller photos (under 100KB each is best).';
       }
@@ -472,7 +474,7 @@ export default function SubmitPropertyPage() {
                           <div className="mt-4 flex text-sm leading-6 text-muted-foreground">
                             <label
                               htmlFor="file-upload"
-                              className="relative cursor-pointer rounded-md font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 hover:text-primary/80"
+                              className="relative cursor-pointer rounded-md font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-visible:ring-offset-2 hover:text-primary/80"
                             >
                               <span>Upload files</span>
                               <input

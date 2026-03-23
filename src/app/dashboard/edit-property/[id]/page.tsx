@@ -207,6 +207,18 @@ export default function EditPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!property || !user || !db) return;
 
+    // Critical check for owner phone number
+    const ownerPhone = profile?.phoneNumber || '';
+    if (!ownerPhone) {
+      toast({
+        variant: "destructive",
+        title: "Phone Number Required",
+        description: "Please update your phone number in your profile so guests can contact you.",
+      });
+      router.push('/dashboard/profile');
+      return;
+    }
+
     const totalSize = values.photos.reduce((acc, p) => acc + p.length, 0);
     if (totalSize > 800000) {
       toast({
@@ -231,7 +243,7 @@ export default function EditPropertyPage() {
         description: values.description,
         amenityIds: values.amenities,
         photoUrls: values.photos,
-        ownerPhoneNumber: profile?.phoneNumber || user.phoneNumber || property.ownerPhoneNumber || '',
+        ownerPhoneNumber: ownerPhone,
       };
 
       const userDocRef = doc(db, 'users', user.uid, 'properties', property.id);

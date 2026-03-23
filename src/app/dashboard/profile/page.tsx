@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -11,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Phone } from 'lucide-react';
 
 export default function ProfilePage() {
   const { toast } = useToast();
@@ -53,18 +52,27 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!db || !user) return;
 
+    if (!phone || phone.trim().length < 10) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Phone Number",
+        description: "Please enter a valid phone number so guests can contact you.",
+      });
+      return;
+    }
+
     setIsUpdating(true);
     try {
       const docRef = doc(db, 'users', user.uid);
       await updateDoc(docRef, {
         firstName,
         lastName,
-        phoneNumber: phone,
+        phoneNumber: phone.trim(),
       });
 
       toast({
         title: "Profile Updated",
-        description: "Your profile information has been successfully updated.",
+        description: "Your information has been successfully updated.",
       });
     } catch (error) {
       toast({
@@ -117,17 +125,23 @@ export default function ProfilePage() {
                 <p className="text-[10px] text-muted-foreground">Email cannot be changed.</p>
             </div>
              <div className="grid gap-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input 
-                  id="phone" 
-                  type="tel" 
-                  value={phone} 
-                  onChange={(e) => setPhone(e.target.value)} 
-                  placeholder="+91 9876543210"
-                  disabled={isUpdating}
-                />
+                <Label htmlFor="phone">Phone Number (Required for bookings)</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="phone" 
+                    type="tel" 
+                    className="pl-10"
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                    placeholder="+91 9876543210"
+                    disabled={isUpdating}
+                    required
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground">Guests will use this to WhatsApp or call you.</p>
             </div>
-             <Button type="submit" className="w-full sm:w-auto rounded-full px-8" disabled={isUpdating}>
+             <Button type="submit" className="w-full sm:w-auto rounded-full px-8 mt-4" disabled={isUpdating}>
                 {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Update Profile
              </Button>
