@@ -33,25 +33,36 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLoading) return
+
     setIsLoading(true)
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      // Attempt to sign in with Firebase Auth
+      await signInWithEmailAndPassword(auth, email.trim(), password)
+      
       toast({
         title: "Login Successful",
         description: "Welcome back to Harvest Haven!",
       })
+      
       router.push('/dashboard')
     } catch (error: any) {
-      console.error("Login error:", error)
+      // Handle known auth errors without triggering a console error overlay
       let errorMessage = "Invalid email or password."
       
       if (error.code === 'auth/invalid-credential') {
-        errorMessage = "Invalid credentials. If you were using a mock account previously, please register a new account as we have migrated to live Firebase authentication."
+        errorMessage = "We couldn't find an account with those credentials. If you previously used a mock account, please register a new one."
       } else if (error.code === 'auth/user-disabled') {
         errorMessage = "This account has been disabled."
       } else if (error.code === 'auth/too-many-requests') {
         errorMessage = "Too many failed attempts. Please try again later."
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = "Email/Password sign-in is not enabled. Please check your Firebase Console."
+      } else {
+        // Log unexpected errors for debugging
+        console.error("Unexpected login error:", error)
+        errorMessage = error.message || "An unexpected error occurred."
       }
 
       toast({
@@ -72,9 +83,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-4">
         <Alert variant="default" className="bg-primary/5 border-primary/20">
           <AlertCircle className="h-4 w-4 text-primary" />
-          <AlertTitle className="text-primary font-bold">Migration Notice</AlertTitle>
+          <AlertTitle className="text-primary font-bold">New Accounts Required</AlertTitle>
           <AlertDescription className="text-xs text-muted-foreground">
-            Harvest Haven is now live on Firebase. Please register a new account to access the dashboard. Old mock accounts are no longer active.
+            Harvest Haven is now live on Firebase. Old mock accounts (e.g., john@example.com) are no longer valid. Please use the <strong>Sign up</strong> link below to create a real account.
           </AlertDescription>
         </Alert>
 
@@ -103,12 +114,6 @@ export default function LoginPage() {
                 <div className="grid gap-2">
                   <div className="flex items-center">
                     <Label htmlFor="password">Password</Label>
-                    <Link
-                      href="#"
-                      className="ml-auto inline-block text-sm underline hover:text-primary transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
                   </div>
                   <div className="relative">
                     <Input
@@ -131,8 +136,14 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <Button type="submit" className="w-full rounded-full" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Login
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
                 </Button>
               </div>
             </form>
