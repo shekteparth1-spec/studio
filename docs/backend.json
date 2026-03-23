@@ -20,21 +20,21 @@
         },
         "email": {
           "type": "string",
-          "description": "The user's email address, used for contact and as a unique identifier for the user's account.",
+          "description": "The user's email address.",
           "format": "email"
         },
         "phoneNumber": {
           "type": "string",
-          "description": "The user's contact phone number from their profile."
+          "description": "The user's profile phone number used for direct contact from listings."
         },
         "registrationDate": {
           "type": "string",
-          "description": "The date and time when the user registered on the platform.",
+          "description": "The date and time when the user registered.",
           "format": "date-time"
         },
         "role": {
           "type": "string",
-          "description": "The application-specific role of the user (e.g., 'Owner', 'Admin')."
+          "description": "The application-specific role of the user."
         }
       },
       "required": [
@@ -50,7 +50,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Amenity",
       "type": "object",
-      "description": "Represents a specific amenity or feature that a property can offer (e.g., Wi-Fi, Swimming Pool, Pet Friendly).",
+      "description": "Represents a specific amenity or feature that a property can offer.",
       "properties": {
         "id": {
           "type": "string",
@@ -58,7 +58,7 @@
         },
         "name": {
           "type": "string",
-          "description": "The name of the amenity (e.g., 'Swimming Pool', 'Wi-Fi')."
+          "description": "The name of the amenity."
         },
         "description": {
           "type": "string",
@@ -75,7 +75,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Property",
       "type": "object",
-      "description": "Represents a farmhouse or resort property listed on the Harvest Haven website, including all details for display and administration.",
+      "description": "Represents a farmhouse or resort property listed on the Harvest Haven website.",
       "properties": {
         "id": {
           "type": "string",
@@ -83,11 +83,11 @@
         },
         "ownerId": {
           "type": "string",
-          "description": "Reference to the UserProfile of the owner who submitted this property listing. (Relationship: UserProfile 1:N Property)"
+          "description": "Reference to the UserProfile of the owner."
         },
         "ownerPhoneNumber": {
           "type": "string",
-          "description": "The contact phone number of the owner, pulled directly from their profile."
+          "description": "The contact phone number of the owner, pulled directly from their profile phone number."
         },
         "title": {
           "type": "string",
@@ -95,11 +95,7 @@
         },
         "description": {
           "type": "string",
-          "description": "A detailed description of the property, including its features and unique selling points."
-        },
-        "addressLine1": {
-          "type": "string",
-          "description": "The first line of the property's physical address."
+          "description": "A detailed description of the property."
         },
         "city": {
           "type": "string",
@@ -119,7 +115,7 @@
         },
         "numberOfBedrooms": {
           "type": "number",
-          "description": "The number of bedrooms available in the property."
+          "description": "The number of bedrooms available."
         },
         "squareFootage": {
           "type": "number",
@@ -127,26 +123,26 @@
         },
         "amenityIds": {
           "type": "array",
-          "description": "References to Amenities available at the property. (Relationship: Amenity N:N Property)",
-          "items": {
-            "type": "string"
-          }
+          "description": "References to Amenities available at the property.",
+          "items": { "type": "string" }
         },
         "photoUrls": {
           "type": "array",
-          "description": "An array of URLs pointing to images of the property for display.",
-          "items": {
-            "type": "string"
-          }
+          "description": "An array of URLs or base64 strings pointing to images of the property.",
+          "items": { "type": "string" }
         },
         "listingStatus": {
           "type": "string",
-          "description": "The current status of the property listing (e.g., 'Draft', 'Pending Approval', 'Approved', 'Rejected', 'Archived')."
+          "description": "The current status of the property listing."
         },
         "submissionDate": {
           "type": "string",
-          "description": "The date and time when the property was submitted for listing by the owner.",
+          "description": "The date and time when the property was submitted.",
           "format": "date-time"
+        },
+        "rating": {
+          "type": "number",
+          "description": "The average rating for the property."
         }
       },
       "required": [
@@ -177,87 +173,27 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores individual user profiles.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user, corresponding to Firebase Authentication UID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{adminId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "A sentinel collection to identify administrators.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The unique identifier of an administrator, corresponding to Firebase Authentication UID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/amenities/{amenityId}",
-        "definition": {
-          "entityName": "Amenity",
-          "schema": {
-            "$ref": "#/backend/entities/Amenity"
-          },
-          "description": "Stores a globally accessible list of all available amenities.",
-          "params": [
-            {
-              "name": "amenityId",
-              "description": "The unique identifier for an amenity."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/UserProfile" },
+          "description": "Stores individual user profiles."
         }
       },
       {
         "path": "/users/{userId}/properties/{propertyId}",
         "definition": {
           "entityName": "Property",
-          "schema": {
-            "$ref": "#/backend/entities/Property"
-          },
-          "description": "Stores properties submitted by a specific owner.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the property owner."
-            },
-            {
-              "name": "propertyId",
-              "description": "The unique identifier for the specific property listing."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Property" },
+          "description": "Stores properties submitted by a specific owner."
         }
       },
       {
         "path": "/public_properties/{propertyId}",
         "definition": {
           "entityName": "Property",
-          "schema": {
-            "$ref": "#/backend/entities/Property"
-          },
-          "description": "Stores 'APPROVED' property listings that are publicly visible.",
-          "params": [
-            {
-              "name": "propertyId",
-              "description": "The unique identifier for the specific property listing."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Property" },
+          "description": "Stores APPROVED property listings that are publicly visible."
         }
       }
     ],
-    "reasoning": "Standard structure for user profiles and property listings."
+    "reasoning": "Standard structure for user profiles and property listings with denormalized owner contact info."
   }
 }

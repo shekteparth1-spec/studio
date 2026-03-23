@@ -27,7 +27,6 @@ import {
   MessageCircle,
   Loader2,
   Phone,
-  AlertCircle,
 } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -45,7 +44,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const amenityIcons: { [key: string]: React.ReactNode } = {
   wifi: <Wifi size={20} />,
@@ -147,6 +145,11 @@ export default function PropertyDetailsPage() {
       <main className="flex-1 bg-background">
         <div className="container mx-auto py-12 px-4">
           <div className="mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 uppercase tracking-wider text-[10px] font-bold">
+                {type}
+              </Badge>
+            </div>
             <h1 className="font-headline text-4xl font-bold md:text-5xl">{title}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground">
               {property.rating && (
@@ -213,14 +216,9 @@ export default function PropertyDetailsPage() {
           <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-8">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-headline text-3xl font-semibold capitalize">
-                    {type} Stay
-                  </h2>
-                  <Badge variant="secondary" className="px-4 py-1 text-sm capitalize bg-primary/10 text-primary border-none">
-                    {type}
-                  </Badge>
-                </div>
+                <h2 className="font-headline text-3xl font-semibold capitalize mb-4">
+                   Stay Details
+                </h2>
                 <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
                   <div className="flex items-center gap-2.5">
                     <BedDouble size={22} className="text-primary" />
@@ -285,21 +283,10 @@ export default function PropertyDetailsPage() {
                   </div>
                   
                   <div className="flex flex-col gap-4">
-                    {!ownerPhone && (
-                      <Alert variant="destructive" className="mb-4">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Contact Unavailable</AlertTitle>
-                        <AlertDescription className="text-xs">
-                          The owner has not provided a contact number in their profile.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    
                     <Button 
                       size="lg"
                       className="w-full rounded-full py-7 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
                       onClick={handleWhatsApp}
-                      disabled={!ownerPhone}
                     >
                       <MessageCircle className="mr-2 h-6 w-6" />
                       WhatsApp Owner
@@ -310,7 +297,6 @@ export default function PropertyDetailsPage() {
                       variant="outline"
                       className="w-full rounded-full py-7 text-lg font-bold border-2 border-primary text-primary hover:bg-primary/5 transition-all"
                       onClick={handleCall}
-                      disabled={!ownerPhone}
                     >
                       <Phone className="mr-2 h-6 w-6" />
                       Call Owner
@@ -326,7 +312,7 @@ export default function PropertyDetailsPage() {
                     </Button>
                     
                     <p className="text-center text-xs text-muted-foreground mt-4 italic">
-                      Direct contact with the owner for best rates and availability.
+                      Direct contact with the owner via their profile phone number.
                     </p>
                   </div>
                 </CardContent>

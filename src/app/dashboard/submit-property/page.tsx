@@ -130,28 +130,17 @@ export default function SubmitPropertyPage() {
     if (!files || files.length === 0) return;
 
     const currentPhotos = form.getValues('photos') || [];
-    
     if (currentPhotos.length >= 8) {
-      toast({
-        variant: "destructive",
-        title: "Photo limit reached",
-        description: "You can only upload up to 8 photos.",
-      });
+      toast({ variant: "destructive", title: "Photo limit reached", description: "You can only upload up to 8 photos." });
       return;
     }
 
     const newFiles = Array.from(files).slice(0, 8 - currentPhotos.length);
-
     const filePromises = newFiles.map(file => {
       if (file.size > 3 * 1024 * 1024) {
-        toast({
-          variant: "destructive",
-          title: "File too large",
-          description: `${file.name} is larger than 3MB.`,
-        });
+        toast({ variant: "destructive", title: "File too large", description: `${file.name} is larger than 3MB.` });
         return null;
       }
-
       return new Promise<string | null>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -163,12 +152,10 @@ export default function SubmitPropertyPage() {
     Promise.all(filePromises).then(results => {
       const validResults = results.filter((r): r is string => r !== null);
       if (validResults.length === 0) return;
-      
       const allPhotos = [...currentPhotos, ...validResults];
       form.setValue('photos', allPhotos, { shouldValidate: true });
       setImagePreviews(allPhotos);
     });
-
     e.target.value = '';
   };
 
@@ -181,13 +168,12 @@ export default function SubmitPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!user || !db) return;
 
-    // Critical check for owner phone number
     const ownerPhone = profile?.phoneNumber || '';
     if (!ownerPhone) {
       toast({
         variant: "destructive",
-        title: "Phone Number Required",
-        description: "Please update your phone number in your profile before submitting a property so guests can contact you.",
+        title: "Profile Phone Number Required",
+        description: "Please add your phone number to your profile before listing a property so guests can contact you.",
       });
       router.push('/dashboard/profile');
       return;
@@ -218,7 +204,6 @@ export default function SubmitPropertyPage() {
         location: values.location,
         city: values.location.split(',')[0].trim() || 'Unknown',
         stateProvince: values.location.split(',')[1]?.trim() || 'India',
-        zipPostalCode: '422001',
         country: 'India',
         pricePerNight: values.pricePerNight,
         numberOfBedrooms: values.bedrooms,
@@ -228,12 +213,6 @@ export default function SubmitPropertyPage() {
         photoUrls: values.photos,
         listingStatus: 'Approved',
         submissionDate: submissionDate,
-        aiScore: 85,
-        addressLine1: values.location,
-        latitude: 19.9975,
-        longitude: 73.7898,
-        numberOfBathrooms: 1,
-        maxGuests: 4,
         rating: 5.0,
       };
 
@@ -245,22 +224,17 @@ export default function SubmitPropertyPage() {
 
       toast({
         title: 'Property Submitted!',
-        description: `Your property "${values.name}" is now live.`,
+        description: `Your property "${values.name}" is now live with your profile phone number attached.`,
       });
       
       router.push('/dashboard');
-
     } catch (error: any) {
       console.error("Submission failed:", error);
       let errorMessage = 'Could not submit your property.';
       if (error.message?.includes('longer than 1048487 bytes')) {
         errorMessage = 'Your listing is too large. Please use smaller photos (under 100KB each is best).';
       }
-      toast({
-          variant: "destructive",
-          title: 'Submission Failed',
-          description: errorMessage,
-      });
+      toast({ variant: "destructive", title: 'Submission Failed', description: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
@@ -271,7 +245,7 @@ export default function SubmitPropertyPage() {
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Submit a Property</CardTitle>
         <CardDescription>
-          Fill out the details below to list your property on Harvest Haven. 
+          Fill out the details below to list your property. Your profile phone number will be used for guest contact.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -385,20 +359,12 @@ export default function SubmitPropertyPage() {
                       disabled={isAiLoading || isSubmitting}
                       className="text-primary hover:text-primary/80"
                     >
-                      {isAiLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
-                      )}
+                      {isAiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                       Generate with AI
                     </Button>
                   </div>
                   <FormControl>
-                    <Textarea
-                      placeholder="Describe your property in detail..."
-                      className="min-h-[150px]"
-                      {...field}
-                    />
+                    <Textarea placeholder="Describe your property in detail..." className="min-h-[150px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -414,39 +380,28 @@ export default function SubmitPropertyPage() {
                     <FormLabel className="text-base font-bold">Amenities</FormLabel>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {amenitiesList.map((item) => (
-                    <FormField
-                      key={item.id}
-                      control={form.control}
-                      name="amenities"
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={item.id}
-                            className="flex flex-row items-start space-x-3 space-y-0"
-                          >
+                    {amenitiesList.map((item) => (
+                      <FormField
+                        key={item.id}
+                        control={form.control}
+                        name="amenities"
+                        render={({ field }) => (
+                          <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
                               <Checkbox
                                 checked={field.value?.includes(item.id)}
                                 onCheckedChange={(checked) => {
                                   return checked
                                     ? field.onChange([...field.value, item.id])
-                                    : field.onChange(
-                                        field.value?.filter(
-                                          (value) => value !== item.id
-                                        )
-                                      )
+                                    : field.onChange(field.value?.filter((value) => value !== item.id))
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              {item.label}
-                            </FormLabel>
+                            <FormLabel className="font-normal cursor-pointer">{item.label}</FormLabel>
                           </FormItem>
-                        )
-                      }}
-                    />
-                  ))}
+                        )}
+                      />
+                    ))}
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -458,7 +413,7 @@ export default function SubmitPropertyPage() {
               name="photos"
               render={() => (
                 <FormItem>
-                  <FormLabel className="font-bold">Photos (Max 8, 3MB each)</FormLabel>
+                  <FormLabel className="font-bold">Photos (Max 8)</FormLabel>
                   <Alert variant="default" className="bg-muted/50 border-none mb-4">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle className="text-xs font-bold uppercase tracking-wider">Storage Limit</AlertTitle>
@@ -472,46 +427,22 @@ export default function SubmitPropertyPage() {
                         <div className="text-center">
                           <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                           <div className="mt-4 flex text-sm leading-6 text-muted-foreground">
-                            <label
-                              htmlFor="file-upload"
-                              className="relative cursor-pointer rounded-md font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-visible:ring-offset-2 hover:text-primary/80"
-                            >
+                            <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-semibold text-primary focus-within:outline-none hover:text-primary/80">
                               <span>Upload files</span>
-                              <input
-                                id="file-upload"
-                                name="file-upload"
-                                type="file"
-                                className="sr-only"
-                                multiple
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                disabled={isSubmitting}
-                              />
+                              <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple accept="image/*" onChange={handleFileChange} disabled={isSubmitting} />
                             </label>
                             <p className="pl-1">or drag and drop</p>
                           </div>
-                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 3MB</p>
+                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 3MB each</p>
                         </div>
                       </div>
                       {imagePreviews.length > 0 && (
                         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
                           {imagePreviews.map((src, index) => (
                             <div key={index} className="group relative aspect-video">
-                              <Image
-                                src={src}
-                                alt={`Preview ${index + 1}`}
-                                fill
-                                className="rounded-md object-cover"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                                onClick={() => handleRemoveImage(index)}
-                              >
-                                <X className="h-4 w-4" />
-                                <span className="sr-only">Remove image</span>
+                              <Image src={src} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
+                              <Button type="button" variant="destructive" size="icon" className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100" onClick={() => handleRemoveImage(index)}>
+                                <X className="h-4 w-4" /><span className="sr-only">Remove image</span>
                               </Button>
                             </div>
                           ))}

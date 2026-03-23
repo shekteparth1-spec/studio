@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -56,8 +55,8 @@ export default function ProfilePage() {
     if (!phone || phone.trim().length < 10) {
       toast({
         variant: "destructive",
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number so guests can contact you via WhatsApp or phone call.",
+        title: "Phone Number Required",
+        description: "Please enter your profile phone number so guests can contact you via WhatsApp or phone call.",
       });
       return;
     }
@@ -73,7 +72,7 @@ export default function ProfilePage() {
 
       toast({
         title: "Profile Updated",
-        description: "Your information has been successfully updated.",
+        description: "Your information and profile phone number have been successfully updated.",
       });
     } catch (error) {
       toast({
@@ -90,13 +89,16 @@ export default function ProfilePage() {
     <Card className="border-none shadow-md">
       <CardHeader>
         <CardTitle className="font-headline text-2xl text-primary">My Profile</CardTitle>
-        <CardDescription>View and manage your account information.</CardDescription>
+        <CardDescription>View and manage your account information and contact details.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col gap-1 pb-4 border-b">
           <h2 className="text-3xl font-bold">{firstName} {lastName}</h2>
           <p className="text-muted-foreground">{user.email}</p>
-          <Badge variant="outline" className="w-fit mt-2 capitalize">{profile?.role || 'User'}</Badge>
+          <div className="flex gap-2 mt-2">
+            <Badge variant="outline" className="capitalize">{profile?.role || 'User'}</Badge>
+            {phone && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none">Contact Active</Badge>}
+          </div>
         </div>
         
         <form className="space-y-4 max-w-lg" onSubmit={handleUpdate}>
@@ -126,7 +128,7 @@ export default function ProfilePage() {
                 <p className="text-[10px] text-muted-foreground">Email cannot be changed.</p>
             </div>
              <div className="grid gap-2">
-                <Label htmlFor="phone">Phone Number (For WhatsApp/Calls)</Label>
+                <Label htmlFor="phone">Profile Phone Number (For WhatsApp/Calls)</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -140,7 +142,7 @@ export default function ProfilePage() {
                     required
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground">Guests will use this number to contact you directly from your listings.</p>
+                <p className="text-[10px] text-muted-foreground font-medium text-primary">This number will be displayed on your listings for guests to contact you directly.</p>
             </div>
              <Button type="submit" className="w-full sm:w-auto rounded-full px-8 mt-4" disabled={isUpdating}>
                 {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
