@@ -111,6 +111,8 @@ export default function PropertyDetailsPage() {
   const location = property.city || property.location || 'Unknown Location';
   const description = property.description || 'No description provided.';
   const amenities = property.amenityIds || property.amenities || [];
+  
+  // Use ownerPhoneNumber directly from property document (standardized in backend.json)
   const ownerPhone = property.ownerPhoneNumber || '';
 
   const handleWhatsApp = () => {
@@ -149,6 +151,11 @@ export default function PropertyDetailsPage() {
               <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 uppercase tracking-wider text-[10px] font-bold">
                 {type}
               </Badge>
+              {ownerPhone && (
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none text-[10px] font-bold uppercase">
+                  Contact Available
+                </Badge>
+              )}
             </div>
             <h1 className="font-headline text-4xl font-bold md:text-5xl">{title}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground">

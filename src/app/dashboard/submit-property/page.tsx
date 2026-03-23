@@ -168,6 +168,7 @@ export default function SubmitPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!user || !db) return;
 
+    // Critical check for profile phone number
     const ownerPhone = profile?.phoneNumber || '';
     if (!ownerPhone) {
       toast({
@@ -216,9 +217,11 @@ export default function SubmitPropertyPage() {
         rating: 5.0,
       };
 
+      // Save to user properties
       const userDocRef = doc(db, 'users', user.uid, 'properties', propertyId);
       await setDoc(userDocRef, propertyData);
 
+      // Save to public properties
       const publicDocRef = doc(db, 'public_properties', propertyId);
       await setDoc(publicDocRef, propertyData);
 
