@@ -26,6 +26,7 @@ import {
   Laptop,
   MessageCircle,
   Loader2,
+  Phone,
 } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -76,7 +77,6 @@ export default function PropertyDetailsPage() {
 
   const { data: property, isLoading } = useDoc(propertyDocRef);
 
-  // If we're still waiting for params OR the database hook to start/finish
   const isFetching = isLoading || !params?.id;
 
   if (isFetching) {
@@ -94,7 +94,6 @@ export default function PropertyDetailsPage() {
     );
   }
 
-  // Only call notFound() if we are definitely finished loading and have no data
   if (!property) {
     notFound();
   }
@@ -112,6 +111,33 @@ export default function PropertyDetailsPage() {
   const location = property.city || property.location || 'Unknown Location';
   const description = property.description || 'No description provided.';
   const amenities = property.amenityIds || property.amenities || [];
+  const ownerPhone = property.ownerPhoneNumber || '';
+
+  const handleWhatsApp = () => {
+    if (!ownerPhone) {
+      toast({
+        variant: "destructive",
+        title: "Contact Unavailable",
+        description: "The owner has not provided a contact number for this listing.",
+      });
+      return;
+    }
+    const cleanPhone = ownerPhone.replace(/\D/g, '');
+    const message = encodeURIComponent(`Hi, I'm interested in booking your stay: ${title} on Harvest Haven.`);
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+  };
+
+  const handleCall = () => {
+    if (!ownerPhone) {
+      toast({
+        variant: "destructive",
+        title: "Contact Unavailable",
+        description: "The owner has not provided a contact number for this listing.",
+      });
+      return;
+    }
+    window.location.href = `tel:${ownerPhone}`;
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -260,24 +286,33 @@ export default function PropertyDetailsPage() {
                     <Button 
                       size="lg"
                       className="w-full rounded-full py-7 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
-                      onClick={() => handleAction(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${title} ${location}`)}`)}
+                      onClick={handleWhatsApp}
                     >
-                      <Map className="mr-2 h-6 w-6" />
-                      Get Directions
+                      <MessageCircle className="mr-2 h-6 w-6" />
+                      WhatsApp Owner
                     </Button>
 
                     <Button 
                       size="lg" 
                       variant="outline"
                       className="w-full rounded-full py-7 text-lg font-bold border-2 border-primary text-primary hover:bg-primary/5 transition-all"
-                      onClick={() => toast({ title: "Booking Request", description: "Direct booking is coming soon. Please contact the owner for availability." })}
+                      onClick={handleCall}
                     >
-                      <MessageCircle className="mr-2 h-6 w-6" />
-                      Inquire Availability
+                      <Phone className="mr-2 h-6 w-6" />
+                      Call Owner
+                    </Button>
+
+                    <Button 
+                      variant="ghost"
+                      className="w-full rounded-full text-muted-foreground"
+                      onClick={() => handleAction(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${title} ${location}`)}`)}
+                    >
+                      <Map className="mr-2 h-4 w-4" />
+                      View on Map
                     </Button>
                     
                     <p className="text-center text-xs text-muted-foreground mt-4 italic">
-                      No commitment required yet. Owners usually respond within 24 hours.
+                      Direct contact with the owner for best rates and availability.
                     </p>
                   </div>
                 </CardContent>

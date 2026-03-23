@@ -37,7 +37,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -81,6 +81,12 @@ export default function SubmitPropertyPage() {
   const router = useRouter();
   const { user } = useUser();
   const db = useFirestore();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid);
+  }, [db, user]);
+  const { data: profile } = useDoc(userProfileRef);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -200,6 +206,7 @@ export default function SubmitPropertyPage() {
       const propertyData = {
         id: propertyId,
         ownerId: user.uid,
+        ownerPhoneNumber: profile?.phoneNumber || user.phoneNumber || '',
         title: values.name,
         name: values.name,
         type: values.type,
@@ -225,11 +232,9 @@ export default function SubmitPropertyPage() {
         rating: 5.0,
       };
 
-      // Save to owner's subcollection
       const userDocRef = doc(db, 'users', user.uid, 'properties', propertyId);
       await setDoc(userDocRef, propertyData);
 
-      // Save to public collection
       const publicDocRef = doc(db, 'public_properties', propertyId);
       await setDoc(publicDocRef, propertyData);
 

@@ -84,6 +84,12 @@ export default function EditPropertyPage() {
   const { user } = useUser();
   const db = useFirestore();
 
+  const userProfileRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid);
+  }, [db, user]);
+  const { data: profile } = useDoc(userProfileRef);
+
   const propertyDocRef = useMemoFirebase(() => {
     if (!db || !user || !params.id) return null;
     return doc(db, 'users', user.uid, 'properties', params.id);
@@ -201,9 +207,7 @@ export default function EditPropertyPage() {
   async function onFormSubmit(values: FormValues) {
     if (!property || !user || !db) return;
 
-    // Calculate total size of photos array to prevent Firestore 1MB document limit error
     const totalSize = values.photos.reduce((acc, p) => acc + p.length, 0);
-    // Firestore limit is 1MB. Base64 strings are larger. We aim for ~800KB total to be safe.
     if (totalSize > 800000) {
       toast({
         variant: "destructive",
@@ -227,12 +231,12 @@ export default function EditPropertyPage() {
         description: values.description,
         amenityIds: values.amenities,
         photoUrls: values.photos,
+        ownerPhoneNumber: profile?.phoneNumber || user.phoneNumber || property.ownerPhoneNumber || '',
       };
 
       const userDocRef = doc(db, 'users', user.uid, 'properties', property.id);
       await updateDoc(userDocRef, updatedData);
 
-      // Also update public_properties if it was approved
       const publicDocRef = doc(db, 'public_properties', property.id);
       await setDoc(publicDocRef, {
         ...property,
