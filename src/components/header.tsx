@@ -23,7 +23,6 @@ import { useUser, useAuth } from '@/firebase';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/properties', label: 'Explore All Stays' },
-  { href: '/dashboard/submit-property', label: 'Submit Property' },
 ];
 
 export default function Header() {
@@ -71,7 +70,7 @@ export default function Header() {
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
-                      href={user || link.href !== '/dashboard/submit-property' ? link.href : '/login'}
+                      href={link.href}
                       className="text-lg font-medium text-foreground/80 transition-colors hover:text-foreground"
                     >
                       {link.label}
@@ -85,7 +84,7 @@ export default function Header() {
           {navLinks.map((link) => (
             <Link
               key={link.href}
-              href={user || link.href !== '/dashboard/submit-property' ? link.href : '/login'}
+              href={link.href}
               className="font-medium text-foreground/60 transition-colors hover:text-foreground/80"
             >
               {link.label}
