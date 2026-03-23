@@ -37,7 +37,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
-import { properties as initialProperties, type Property, type User } from '@/lib/data';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, updateDoc, setDoc } from 'firebase/firestore';
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -67,7 +68,7 @@ const formSchema = z.object({
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
   description: z.string().min(50, 'Description must be at least 50 characters.'),
   amenities: z.array(z.string()),
-  photos: z.array(z.string()),
+  photos: z.array(z.string()).max(2, 'Maximum 2 photos allowed.'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -77,11 +78,17 @@ export default function EditPropertyPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [property, setProperty] = useState<Property | null>(null);
+  const { user } = useUser();
+  const db = useFirestore();
+
+  const propertyDocRef = useMemoFirebase(() => {
+    if (!db || !user || !params.id) return null;
+    return doc(db, 'users', user.uid, 'properties', params.id);
+  }, [db, user, params.id]);
+
+  const { data: property, isLoading } = useDoc(propertyDocRef);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -99,57 +106,21 @@ export default function EditPropertyPage() {
   });
 
   useEffect(() => {
-    const loadData = () => {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const currentUser = JSON.parse(userData);
-        setUser(currentUser);
-
-        const storedPropertiesRaw = localStorage.getItem('properties');
-        const allProperties = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
-        const foundProperty = allProperties.find((p: Property) => p.id === params.id);
-
-        if (foundProperty) {
-          // Check if user is authorized (owner or admin)
-          if (foundProperty.ownerId !== currentUser.id && currentUser.role !== 'admin') {
-            toast({
-              variant: 'destructive',
-              title: 'Unauthorized',
-              description: 'You do not have permission to edit this property.',
-            });
-            router.push('/dashboard');
-            return;
-          }
-
-          setProperty(foundProperty);
-          form.reset({
-            name: foundProperty.name,
-            type: foundProperty.type,
-            location: foundProperty.location,
-            pricePerNight: foundProperty.pricePerNight,
-            bedrooms: foundProperty.bedrooms,
-            squareFeet: foundProperty.squareFeet,
-            description: foundProperty.description,
-            amenities: foundProperty.amenities,
-            photos: foundProperty.imageUrls,
-          });
-          setImagePreviews(foundProperty.imageUrls);
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Not Found',
-            description: 'The property you are trying to edit does not exist.',
-          });
-          router.push('/dashboard');
-        }
-      } else {
-        router.push('/login');
-      }
-      setIsLoading(false);
-    };
-
-    loadData();
-  }, [params.id, router, toast, form]);
+    if (property) {
+      form.reset({
+        name: property.title || property.name,
+        type: property.type,
+        location: property.location,
+        pricePerNight: property.pricePerNight,
+        bedrooms: property.numberOfBedrooms || property.bedrooms,
+        squareFeet: property.squareFootage || property.squareFeet,
+        description: property.description,
+        amenities: property.amenityIds || property.amenities || [],
+        photos: property.photoUrls || property.imageUrls || [],
+      });
+      setImagePreviews(property.photoUrls || property.imageUrls || []);
+    }
+  }, [property, form]);
 
   async function handleGenerateDescription() {
     setIsAiLoading(true);
@@ -178,28 +149,43 @@ export default function EditPropertyPage() {
     if (!files || files.length === 0) return;
 
     const currentPhotos = form.getValues('photos') || [];
-    const newFiles = Array.from(files);
+    
+    if (currentPhotos.length >= 2) {
+      toast({
+        variant: "destructive",
+        title: "Photo limit reached",
+        description: "You can only upload up to 2 photos for this prototype.",
+      });
+      return;
+    }
+
+    const newFiles = Array.from(files).slice(0, 2 - currentPhotos.length);
 
     const filePromises = newFiles.map(file => {
-      return new Promise<string>((resolve, reject) => {
+      if (file.size > 300 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: `${file.name} is larger than 300KB.`,
+        });
+        return null;
+      }
+
+      return new Promise<string | null>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
+        reader.onerror = () => resolve(null);
         reader.readAsDataURL(file);
       });
     });
 
-    Promise.all(filePromises).then(newPhotoDataUrls => {
-      const allPhotos = [...currentPhotos, ...newPhotoDataUrls];
+    Promise.all(filePromises).then(results => {
+      const validResults = results.filter((r): r is string => r !== null);
+      if (validResults.length === 0) return;
+      
+      const allPhotos = [...currentPhotos, ...validResults];
       form.setValue('photos', allPhotos, { shouldValidate: true });
       setImagePreviews(allPhotos);
-    }).catch(error => {
-      console.error("Error reading files:", error);
-      toast({
-        variant: "destructive",
-        title: "Error uploading images",
-        description: "There was a problem processing your images.",
-      });
     });
 
     e.target.value = '';
@@ -212,33 +198,34 @@ export default function EditPropertyPage() {
   };
 
   async function onFormSubmit(values: FormValues) {
-    if (!property || !user) return;
+    if (!property || !user || !db) return;
 
     setIsSubmitting(true);
     try {
-      const storedPropertiesRaw = localStorage.getItem('properties');
-      const currentProperties: Property[] = storedPropertiesRaw ? JSON.parse(storedPropertiesRaw) : initialProperties;
-      
-      const updatedProperties = currentProperties.map(p => {
-        if (p.id === property.id) {
-          return {
-            ...p,
-            name: values.name,
-            type: values.type,
-            location: values.location,
-            pricePerNight: values.pricePerNight,
-            bedrooms: values.bedrooms,
-            squareFeet: values.squareFeet,
-            description: values.description,
-            amenities: values.amenities,
-            imageUrls: values.photos,
-          };
-        }
-        return p;
-      });
+      const updatedData = {
+        title: values.name,
+        name: values.name,
+        type: values.type,
+        location: values.location,
+        city: values.location.split(',')[0].trim() || 'Unknown',
+        pricePerNight: values.pricePerNight,
+        numberOfBedrooms: values.bedrooms,
+        squareFootage: values.squareFeet,
+        description: values.description,
+        amenityIds: values.amenities,
+        photoUrls: values.photos,
+      };
 
-      localStorage.setItem('properties', JSON.stringify(updatedProperties));
-      window.dispatchEvent(new Event('storage'));
+      const userDocRef = doc(db, 'users', user.uid, 'properties', property.id);
+      await updateDoc(userDocRef, updatedData);
+
+      // Also update public_properties if it was approved
+      const publicDocRef = doc(db, 'public_properties', property.id);
+      await setDoc(publicDocRef, {
+        ...property,
+        ...updatedData,
+        id: property.id
+      }, { merge: true });
 
       toast({
         title: 'Property Updated',
@@ -246,12 +233,12 @@ export default function EditPropertyPage() {
       });
       
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Update failed:", error);
       toast({
           variant: "destructive",
           title: 'Update Failed',
-          description: 'There was an error updating your property. Please try again.',
+          description: error.message || 'There was an error updating your property. Check image sizes.',
       });
     } finally {
       setIsSubmitting(false);
@@ -270,9 +257,9 @@ export default function EditPropertyPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Edit Property: {property?.name}</CardTitle>
+          <CardTitle className="font-headline">Edit Property: {property?.title || property?.name}</CardTitle>
           <CardDescription>
-            Update your property information below.
+            Update your property information below. Max 2 photos, 300KB each.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -458,7 +445,7 @@ export default function EditPropertyPage() {
                 name="photos"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Photos</FormLabel>
+                    <FormLabel>Photos (Max 2, 300KB each)</FormLabel>
                     <FormControl>
                       <div>
                         <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10">
@@ -483,13 +470,13 @@ export default function EditPropertyPage() {
                               </label>
                               <p className="pl-1">or drag and drop</p>
                             </div>
-                            <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG, GIF up to 10MB</p>
+                            <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 300KB</p>
                           </div>
                         </div>
                         {imagePreviews.length > 0 && (
-                          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                          <div className="mt-4 grid grid-cols-2 gap-4">
                             {imagePreviews.map((src, index) => (
-                              <div key={index} className="group relative aspect-square">
+                              <div key={index} className="group relative aspect-video">
                                 <Image
                                   src={src}
                                   alt={`Preview ${index + 1}`}

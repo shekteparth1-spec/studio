@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/form';
 import { getListingSuggestion } from '@/ai/flows/listingOptimizer';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 
 const amenitiesList = [
   { id: 'wifi', label: 'Wi-Fi' },
@@ -67,7 +67,7 @@ const formSchema = z.object({
   squareFeet: z.coerce.number().min(100, 'Must be at least 100 sq ft.'),
   description: z.string().min(20, 'Description must be at least 20 characters.'),
   amenities: z.array(z.string()),
-  photos: z.array(z.string()),
+  photos: z.array(z.string()).max(2, 'Maximum 2 photos allowed in prototype.'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -123,28 +123,44 @@ export default function SubmitPropertyPage() {
     if (!files || files.length === 0) return;
 
     const currentPhotos = form.getValues('photos') || [];
-    const newFiles = Array.from(files);
+    
+    if (currentPhotos.length >= 2) {
+      toast({
+        variant: "destructive",
+        title: "Photo limit reached",
+        description: "You can only upload up to 2 photos for this prototype to save space.",
+      });
+      return;
+    }
+
+    const newFiles = Array.from(files).slice(0, 2 - currentPhotos.length);
 
     const filePromises = newFiles.map(file => {
-      return new Promise<string>((resolve, reject) => {
+      // 300KB limit to prevent Firestore 1MB document limit error
+      if (file.size > 300 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: `${file.name} is larger than 300KB. Please use smaller images.`,
+        });
+        return null;
+      }
+
+      return new Promise<string | null>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
+        reader.onerror = () => resolve(null);
         reader.readAsDataURL(file);
       });
     });
 
-    Promise.all(filePromises).then(newPhotoDataUrls => {
-      const allPhotos = [...currentPhotos, ...newPhotoDataUrls];
+    Promise.all(filePromises).then(results => {
+      const validResults = results.filter((r): r is string => r !== null);
+      if (validResults.length === 0) return;
+      
+      const allPhotos = [...currentPhotos, ...validResults];
       form.setValue('photos', allPhotos, { shouldValidate: true });
       setImagePreviews(allPhotos);
-    }).catch(error => {
-      console.error("Error reading files:", error);
-      toast({
-        variant: "destructive",
-        title: "Error uploading images",
-        description: "There was a problem processing your images.",
-      });
     });
 
     e.target.value = '';
@@ -181,14 +197,10 @@ export default function SubmitPropertyPage() {
         country: 'India',
         pricePerNight: values.pricePerNight,
         numberOfBedrooms: values.bedrooms,
-        bedrooms: values.bedrooms,
         squareFootage: values.squareFeet,
-        squareFeet: values.squareFeet,
         description: values.description,
         amenityIds: values.amenities,
-        amenities: values.amenities,
-        photoUrls: values.photos,
-        imageUrls: values.photos,
+        photoUrls: values.photos, // Only store once to save document space
         listingStatus: 'Approved',
         submissionDate: submissionDate,
         aiScore: 85,
@@ -200,11 +212,9 @@ export default function SubmitPropertyPage() {
         rating: 5.0,
       };
 
-      // Create properties in the user's subcollection
       const userPropertiesRef = collection(db, 'users', user.uid, 'properties');
       const docRef = await addDoc(userPropertiesRef, propertyData);
 
-      // Also copy to public_properties for immediate visibility
       await setDoc(doc(db, 'public_properties', docRef.id), {
         ...propertyData,
         id: docRef.id
@@ -217,12 +227,12 @@ export default function SubmitPropertyPage() {
       
       router.push('/dashboard');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Submission failed:", error);
       toast({
           variant: "destructive",
           title: 'Submission Failed',
-          description: 'Could not submit your property. Please check your internet and try again.',
+          description: error.message || 'Could not submit your property. Please check image sizes.',
       });
     } finally {
       setIsSubmitting(false);
@@ -234,7 +244,8 @@ export default function SubmitPropertyPage() {
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Submit a Property</CardTitle>
         <CardDescription>
-          Fill out the details below to list your property on Harvest Haven.
+          Fill out the details below to list your property on Harvest Haven. 
+          <span className="block mt-1 text-xs text-muted-foreground">Note: Maximum 2 photos, each under 300KB.</span>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -421,7 +432,7 @@ export default function SubmitPropertyPage() {
               name="photos"
               render={() => (
                 <FormItem>
-                  <FormLabel className="font-bold">Photos</FormLabel>
+                  <FormLabel className="font-bold">Photos (Max 2, 300KB each)</FormLabel>
                   <FormControl>
                     <div>
                       <div className="mt-2 flex justify-center rounded-lg border border-dashed border-input px-6 py-10 hover:bg-muted/30 transition-colors">
@@ -446,13 +457,13 @@ export default function SubmitPropertyPage() {
                             </label>
                             <p className="pl-1">or drag and drop</p>
                           </div>
-                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 10MB</p>
+                          <p className="text-xs leading-5 text-muted-foreground/80">PNG, JPG up to 300KB</p>
                         </div>
                       </div>
                       {imagePreviews.length > 0 && (
-                        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        <div className="mt-4 grid grid-cols-2 gap-4">
                           {imagePreviews.map((src, index) => (
-                            <div key={index} className="group relative aspect-square">
+                            <div key={index} className="group relative aspect-video">
                               <Image
                                 src={src}
                                 alt={`Preview ${index + 1}`}
