@@ -139,6 +139,7 @@ export default function PropertiesPage() {
                         <SelectItem value="any">All Stays</SelectItem>
                         <SelectItem value="farmhouse">Farmhouse</SelectItem>
                         <SelectItem value="resort">Resort</SelectItem>
+                        <SelectItem value="villa">Villa</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

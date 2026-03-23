@@ -62,7 +62,7 @@ const amenitiesList = [
 
 const formSchema = z.object({
   name: z.string().min(5, 'Property name must be at least 5 characters.'),
-  type: z.enum(['farmhouse', 'resort']),
+  type: z.enum(['farmhouse', 'resort', 'villa']),
   location: z.string().min(3, 'Location is required.'),
   contactNumber: z.string().min(10, 'Please enter a valid contact number.'),
   pricePerNight: z.coerce.number().min(10, 'Price must be at least 10 INR.'),
@@ -281,6 +281,7 @@ export default function SubmitPropertyPage() {
                       <SelectContent>
                         <SelectItem value="farmhouse">Farmhouse</SelectItem>
                         <SelectItem value="resort">Resort</SelectItem>
+                        <SelectItem value="villa">Villa</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -13,7 +13,7 @@ export type Property = {
   id: string;
   name: string;
   title?: string;
-  type: 'farmhouse' | 'resort';
+  type: 'farmhouse' | 'resort' | 'villa';
   location: string;
   city?: string;
   stateProvince?: string;
@@ -130,7 +130,7 @@ export const properties: Property[] = [
     id: 'prop-4',
     name: 'The Vintage Villa',
     title: 'The Vintage Villa',
-    type: 'resort',
+    type: 'villa',
     location: 'Udaipur, Rajasthan',
     city: 'Udaipur',
     stateProvince: 'Rajasthan',
